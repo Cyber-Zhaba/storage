@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Register - Любители предпрофа</title>
+    <link rel="stylesheet" href="../static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet" href="../static/css/Articles-Cards-images.css">
+    <link rel="stylesheet" href="../static/css/Features-Small-Icons-Color-icons.css">
+    <link rel="stylesheet" href="../static/css/untitled.css">
+</head>
+
+<body class="bg-gradient-primary">
+<div class="container">
+    <div class="card shadow-lg o-hidden border-0 my-5">
+        <div class="card-body p-0">
+            <div class="row">
+                <div class="col-lg-5 d-none d-lg-flex">
+                    <div class="flex-grow-1 bg-register-image"
+                         style="background-image: url(&quot;../static/img//regs/field-1.jpg&quot;);"></div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="p-5 pb-xxl-5" style="padding-left: 0px;padding-bottom: 0px;">
+                        <div class="text-center">
+                            <h4 class="text-dark mb-4">Регистрация</h4>
+                        </div>
+                        <form action="" method="post" style="background-color: transparent"> {{
+                            form.hidden_tag() }}
+                            <div class="card signin" style="background-color: transparent">
+                                <div class="mb-3"> {{ form.login.label }}
+                                    {{ form.login(class="form-control") }}
+                                    {% for error in form.login.errors %}
+                                    <div class="alert alert-danger" role="alert"> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="mb-3"> {{ form.email.label }}
+                                    {{ form.email(class="form-control", type="email") }}
+                                    {% for error in form.email.errors %}
+                                    <div class="alert alert-danger" role="alert"> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="mb-3"> {{ form.password.label }}
+                                    {{ form.password(class="form-control", type="password") }}
+                                    {% for error in form.password.errors %}
+                                    <div class="alert alert-danger" role="alert"> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="mb-3"> {{ form.remember_me() }} {{ form.remember_me.label }}</div>
+                                <div class="d-grid">
+                                    <button type="submit" id="submit" name="submit" value="Submit"
+                                            class="btn btn-primary">Зарегистрироваться
+                                    </button>
+                                </div>
+                                {% if message %}
+                                <div class="alert alert-danger d-grid" role="alert">{{message}}</div>
+                                {% endif %}
+                            </div>
+                            <hr>
+                            <hr>
+                        </form>
+                        <div class="text-center"></div>
+                        <div class="text-center"><a class="small" href="login.html">Уже есть аккаунт? Войти!</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../static/bootstrap/js/bootstrap.min.js"></script>
+<script src="../static/js/theme.js"></script>
+</body>
+
+</html>
