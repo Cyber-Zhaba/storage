@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" data-bs-theme="light">
+<html data-bs-theme="light" lang="ru" data-bss-forced-theme="light">
 
 <head>
     <meta charset="utf-8">
@@ -15,8 +15,11 @@
 
 <body id="page-top">
     <div id="wrapper">
-        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
-            <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#"><div class="sidebar-brand-icon rotate-n-15"></div><div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div></a>
+        <nav class="navbar align-items-start navbar-dark sidebar sidebar-dark accordion bg-gradient-primary p-0">
+            <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
+                    <div class="sidebar-brand-icon rotate-n-15"></div>
+                    <div class="sidebar-brand-text mx-3"><span style="font-size:12px;">Любители предпрофа</span></div>
+                </a>
                 <hr class="sidebar-divider my-0">
                 <ul class="navbar-nav text-light" id="accordionSidebar">
                     <li class="nav-item"></li>
@@ -31,7 +34,7 @@
         </nav>
         <div class="d-flex flex-column" id="content-wrapper">
             <div id="content">
-                <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top ps-xxl-5">
+                <nav class="navbar navbar-expand bg-white shadow navbar-light mb-4 topbar static-top ps-xxl-5">
                     <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop-1" type="button"><i class="fas fa-bars"></i></button>
                         <ul class="navbar-nav flex-nowrap ms-auto">
                             <li class="nav-item dropdown no-arrow">
@@ -86,13 +89,13 @@
                                     <form>
                                         <div class="row">
                                             <div class="col">
-                                                <div class="mb-3"><label class="form-label form-label" for="username"><strong>Username</strong></label><input class="form-control form-control" type="text" id="username" placeholder="Username" name="username"></div>
+                                                <div class="mb-3"><label class="form-label form-label form-label" for="username"><strong>Username</strong></label><input class="form-control form-control form-control" type="text" id="username" name="username" placeholder="Username"></div>
                                             </div>
                                             <div class="col">
-                                                <div class="mb-3"><label class="form-label form-label" for="email"><strong>Email</strong></label><input class="form-control form-control" type="email" id="email" placeholder="user@example.com" name="email"></div>
+                                                <div class="mb-3"><label class="form-label form-label form-label" for="email"><strong>Email</strong></label><input class="form-control form-control form-control" type="email" id="email" name="email" placeholder="user@example.com"></div>
                                             </div>
                                             <div class="col">
-                                                <div class="mb-3"><label class="form-label form-label" for="email"><strong>Права</strong></label><select class="form-select form-select">
+                                                <div class="mb-3"><label class="form-label form-label form-label" for="email"><strong>Права</strong></label><select class="form-select form-select form-select">
                                                         <optgroup label="This is a group">
                                                             <option value="12" selected="">This is item 1</option>
                                                             <option value="13">This is item 2</option>
@@ -101,7 +104,7 @@
                                                     </select></div>
                                             </div>
                                             <div class="col">
-                                                <div class="mb-3"><label class="form-label form-label" for="email"><strong>Введите ключ</strong></label><input class="form-control form-control" type="text"></div>
+                                                <div class="mb-3"><label class="form-label form-label form-label" for="email"><strong>Введите ключ</strong></label><input class="form-control form-control form-control" type="text"></div>
                                             </div>
                                         </div>
                                         <div class="mb-3"><button class="btn btn-primary btn-sm" type="submit">Сохранить изменения</button></div>
@@ -120,7 +123,7 @@
                         <div class="card-body pe-xl-5 pb-xl-5">
                             <div class="row">
                                 <div class="col-md-6 col-lg-4 col-xl-3 text-nowrap">
-                                    <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label class="form-label form-label">Показывать по&nbsp;<select class="form-select-sm d-inline-block form-select" style="margin-right: -68px;">
+                                    <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label class="form-label form-label form-label">Показывать по&nbsp;<select class="form-select-sm d-inline-block form-select" style="margin-right:-68px;">
                                                 <option value="10" selected="">10</option>
                                                 <option value="25">25</option>
                                                 <option value="50">50</option>
@@ -128,11 +131,11 @@
                                             </select></label></div>
                                 </div>
                                 <div class="col-md-6 col-lg-3 col-xl-3">
-                                    <div class="text-md-end dataTables_filter" id="dataTable_filter"><label class="form-label form-label"><input class="form-control-sm form-control" type="search" aria-controls="dataTable" placeholder="Поиск файлов.."></label></div>
+                                    <div class="text-md-end dataTables_filter" id="dataTable_filter"><label class="form-label form-label form-label"><input class="form-control-sm form-control" type="search" aria-controls="dataTable" placeholder="Поиск файлов.."></label></div>
                                 </div>
                                 <div class="col"><button class="btn btn-primary btn-sm" type="submit">Искать</button></div>
                             </div>
-                            <div class="table-responsive table mt-2" id="dataTable-1" role="grid" aria-describedby="dataTable_info" style="padding-bottom: 0px;margin-bottom: 5px;padding-right: 0px;margin-right: 5px;">
+                            <div class="table-responsive table mt-2" id="dataTable-1" role="grid" aria-describedby="dataTable_info" style="padding-bottom:0px;margin-bottom:5px;padding-right:0px;margin-right:5px;">
                                 <table class="table my-0" id="dataTable">
                                     <thead>
                                         <tr>
@@ -201,7 +204,7 @@
                         <div class="card-body pe-xl-5 pb-xl-5">
                             <div class="row">
                                 <div class="col-md-6 col-lg-4 col-xl-3 text-nowrap">
-                                    <div id="dataTable_length-1" class="dataTables_length" aria-controls="dataTable"><label class="form-label form-label">Показывать по&nbsp;<select class="form-select-sm d-inline-block form-select" style="margin-right: -68px;">
+                                    <div id="dataTable_length-1" class="dataTables_length" aria-controls="dataTable"><label class="form-label form-label form-label">Показывать по&nbsp;<select class="form-select-sm d-inline-block form-select" style="margin-right:-68px;">
                                                 <option value="10" selected="">10</option>
                                                 <option value="25">25</option>
                                                 <option value="50">50</option>
@@ -209,11 +212,11 @@
                                             </select></label></div>
                                 </div>
                                 <div class="col-md-6 col-lg-3 col-xl-3">
-                                    <div class="text-md-end dataTables_filter" id="dataTable_filter-1"><label class="form-label form-label"><input class="form-control-sm form-control" type="search" aria-controls="dataTable" placeholder="Поиск действий..."></label></div>
+                                    <div class="text-md-end dataTables_filter" id="dataTable_filter-1"><label class="form-label form-label form-label"><input class="form-control-sm form-control" type="search" aria-controls="dataTable" placeholder="Поиск действий..."></label></div>
                                 </div>
                                 <div class="col"><button class="btn btn-primary btn-sm" type="submit">Искать</button></div>
                             </div>
-                            <div class="table-responsive table mt-2" id="dataTable-2" role="grid" aria-describedby="dataTable_info" style="padding-bottom: 0px;margin-bottom: 5px;padding-right: 0px;margin-right: 5px;">
+                            <div class="table-responsive table mt-2" id="dataTable-2" role="grid" aria-describedby="dataTable_info" style="padding-bottom:0px;margin-bottom:5px;padding-right:0px;margin-right:5px;">
                                 <table class="table my-0" id="dataTable">
                                     <thead>
                                         <tr>
@@ -262,9 +265,14 @@
                         </div>
                     </div>
                 </div>
+                <footer class="bg-white sticky-footer" color="#4e73df">
+                    <div class="container my-auto">
+                        <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
+                    </div>
+                </footer>
             </div>
         </div><a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
-    </div>
+    </div><script src="assets/bootstrap/js/bootstrap.min.js"></script><script src="assets/js/theme.js"></script>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="assets/js/theme.js"></script>
 </body>
