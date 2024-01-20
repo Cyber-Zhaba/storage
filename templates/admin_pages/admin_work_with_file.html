@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-bs-theme="light">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Profile - Любители предпрофа</title>
+    <title>Page Not Found - Любители предпрофа</title>
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="assets/fonts/fontawesome-all.min.css">
@@ -18,19 +18,20 @@
         <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
             <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#"><div class="sidebar-brand-icon rotate-n-15"></div><div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div></a>
                 <hr class="sidebar-divider my-0">
+                <div class="text-center d-none d-md-inline"></div>
                 <ul class="navbar-nav text-light" id="accordionSidebar">
                     <li class="nav-item"></li>
-                    <li class="nav-item"><a class="nav-link active" href="user_profile.html"><span>Аккаунт</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="user_table_files.html"><span>Все файлы</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="admin_profile.html"><span>Аккаунт</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="admin_table_files.html"><span>Все файлы</span></a><a class="nav-link" href="admin_table_serve.html"><span>Все сервера</span></a><a class="nav-link" href="admin_table_users.html"><span>Пользователи</span></a></li>
                     <li class="nav-item"></li>
                     <li class="nav-item"></li>
                     <li class="nav-item"></li>
                 </ul>
-                <div class="text-center d-none d-md-inline"></div>
             </div>
         </nav>
         <div class="d-flex flex-column" id="content-wrapper">
-            <div id="content">
+            <div id="content" style="margin-bottom: 11px;padding-bottom: 0px;">
+                <div class="card"></div>
                 <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top ps-xxl-5">
                     <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop-1" type="button"><i class="fas fa-bars"></i></button>
                         <ul class="navbar-nav flex-nowrap ms-auto">
@@ -42,43 +43,36 @@
                         </ul>
                     </div>
                 </nav>
-                <div class="container-fluid">
-                    <h3 class="text-dark mb-4">Аккаунт</h3>
-                    <div class="row mb-3">
-                        <div class="col-lg-8">
+                <h3 class="text-dark mb-4">&nbsp;Работа с файлом</h3>
+                <div class="card shadow mb-3">
+                    <div class="card-header py-3">
+                        <p class="fw-bold text-primary m-0">Данные файла</p>
+                    </div>
+                    <div class="card-body">
+                        <form>
                             <div class="row">
-                                <div class="col-xl-12">
-                                    <div class="card shadow mb-3">
-                                        <div class="card-header py-3">
-                                            <p class="fw-bold text-primary m-0">Личные данные&nbsp;</p>
-                                        </div>
-                                        <div class="card-body">
-                                            <form>
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <div class="mb-3"><label class="form-label form-label" for="username"><strong>Username</strong></label><input class="form-control form-control" type="text" id="username" placeholder="Username" name="username"></div>
-                                                    </div>
-                                                    <div class="col">
-                                                        <div class="mb-3"><label class="form-label form-label" for="email"><strong>Email</strong></label><input class="form-control form-control" type="email" id="email" placeholder="user@example.com" name="email"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3"><button class="btn btn-primary btn-sm" type="submit">Сохранить</button></div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    <div class="card shadow"></div>
+                                <div class="col">
+                                    <div class="mb-3"><label class="form-label form-label" for="username"><strong>Название файла</strong></label><input class="form-control form-control" type="text" id="file_name" placeholder="Имя файла" name="filename"></div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3"><label class="form-label form-label" for="email"><strong>Введите ключ</strong></label><input class="form-control form-control" type="text"></div>
                                 </div>
                             </div>
-                        </div>
+                            <div class="mb-3"><button class="btn btn-primary btn-sm" type="submit">Сохранить</button></div>
+                        </form>
                     </div>
-                    <div class="card shadow mb-5"></div>
+                </div><input type="search" placeholder="Поиск в файле" style="padding-left: 0px;margin-left: 10px;"><button class="btn btn-primary" type="button" style="padding-bottom: 0px;padding-top: 0px;margin-right: 20px;margin-left: 10px;margin-top: 5px;margin-bottom: 6px;">Найти</button>
+                <p></p>
+                <div></div><textarea style="width: 90%;height: 60%;margin-left: 8px;padding-left: 4px;padding-bottom: 0px;margin-bottom: 46px;margin-right: 28px;padding-right: 0px;"></textarea>
+                <footer class="bg-white sticky-footer">
+                    <div class="container my-auto">
+                        <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
+                    </div>
+                </footer>
+                <div class="col-lg-12 col-xl-12">
+                    <div class="card shadow"></div>
                 </div>
             </div>
-            <footer class="bg-white sticky-footer">
-                <div class="container my-auto">
-                    <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
-                </div>
-            </footer>
         </div><a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
     </div>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
