@@ -101,6 +101,7 @@ def user_profile():
     return render_template('user_profile.html', title='Главная страница')
 
 
+
 if __name__ == '__main__':
     api.add_resource(UserListResource, '/api/users')
     api.add_resource(UserResource, '/api/<int:user_id>')
