@@ -54,4 +54,4 @@ class UserListResource(Resource):
         users.set_password(args['password'])
         self.session.add(users)
         self.session.commit()
-        return jsonify({'status': 'OK'})
+        return jsonify({'user': users.to_dict()})

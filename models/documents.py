@@ -17,5 +17,5 @@ class Document(SqlAlchemyBase, UserMixin, SerializerMixin):
     owner_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
     last_modified = sqlalchemy.Column(sqlalchemy.DATETIME, default=datetime.datetime.now, nullable=True)
     size = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    amount_of_lines = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
-    version = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    number_of_lines = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    version = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, default=1)

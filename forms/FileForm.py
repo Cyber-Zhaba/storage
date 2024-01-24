@@ -4,4 +4,4 @@ from wtforms.validators import DataRequired
 
 
 class AddDocumentsForm(FlaskForm):
-    content = FileField('Видео', validators=[DataRequired()])
+    content = FileField('Текстовый файл', validators=[DataRequired()])

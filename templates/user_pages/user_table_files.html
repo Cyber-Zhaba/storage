@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Table - Любители предпрофа</title>
     <link rel="stylesheet" href="../static/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="../static/fonts/fontawesome-all.min.css">
     <link rel="stylesheet" href="../static/css/Articles-Cards-images.css">
     <link rel="stylesheet" href="../static/css/Features-Small-Icons-Color-icons.css">
@@ -14,110 +15,147 @@
 </head>
 
 <body id="page-top">
-    <div id="wrapper">
-        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
-            <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="/"><div class="sidebar-brand-icon rotate-n-15"></div><div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div></a>
-                <hr class="sidebar-divider my-0">
-                <ul class="navbar-nav text-light" id="accordionSidebar">
-                    <li class="nav-item"></li>
-                    <li class="nav-item"><a class="nav-link" href="/user_profile/{{ user_id }}"><span>Аккаунт</span></a></li>
-                    <li class="nav-item"><a class="nav-link active"><span>Все файлы</span></a></li>
-                    <li class="nav-item"></li>
-                    <li class="nav-item"></li>
-                    <li class="nav-item"></li>
-                </ul>
-                <div class="text-center d-none d-md-inline"></div>
-            </div>
-        </nav>
-        <div class="d-flex flex-column" id="content-wrapper">
-            <div id="content">
-                <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top ps-xxl-5">
-                    <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop-1" type="button"><i class="fas fa-bars"></i></button>
-                        <ul class="navbar-nav flex-nowrap ms-auto">
-                            <li class="nav-item dropdown no-arrow">
-                                <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="/logout"><span class="d-none d-lg-inline me-2 text-gray-600 small">Username</span></a>
-                                    <div class="shadow dropdown-menu dropdown-menu-end animated--grow-in"><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Logout</a></div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
-                <div class="d-sm-flex justify-content-between align-items-center mb-4" style="padding-right: 32px;">
-                    <h2 class="text-dark mb-0">&nbsp; &nbsp;Мои файлы&nbsp;</h2><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="#"><i class="fas fa-download text-white-50 fa-sm"></i>&nbsp;Загрузить файл на сервер</a>
-                </div>
+<div id="wrapper">
+    <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
+        <div class="container-fluid p-0"><a
+                class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="/">
+            <div class="sidebar-brand-icon rotate-n-15"></div>
+            <div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div>
+        </a>
+            <hr class="sidebar-divider my-0">
+            <ul class="navbar-nav text-light" id="accordionSidebar">
+                <li class="nav-item"></li>
+                <li class="nav-item"><a class="nav-link" href="/user_profile/{{ user_id }}"><span>Аккаунт</span></a>
+                </li>
+                <li class="nav-item"><a class="nav-link active"><span>Все файлы</span></a></li>
+                <li class="nav-item"></li>
+                <li class="nav-item"></li>
+                <li class="nav-item"></li>
+            </ul>
+            <div class="text-center d-none d-md-inline"></div>
+        </div>
+    </nav>
+    <div class="d-flex flex-column" id="content-wrapper">
+        <div id="content">
+            <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top ps-xxl-5">
                 <div class="container-fluid">
-                    <div class="card shadow">
-                        <div class="card-header py-3">
-                            <p class="fw-bold text-primary m-0">Работа с файлами</p>
+                    <button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop-1" type="button"><i
+                            class="fas fa-bars"></i></button>
+                    <ul class="navbar-nav flex-nowrap ms-auto">
+                        <li class="nav-item dropdown no-arrow">
+                            <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link"
+                                                                       aria-expanded="false" data-bs-toggle="dropdown"
+                                                                       href="/logout"><span
+                                    class="d-none d-lg-inline me-2 text-gray-600 small">Username</span></a>
+                                <div class="shadow dropdown-menu dropdown-menu-end animated--grow-in"><a
+                                        class="dropdown-item" href="/logout"><i
+                                        class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Logout</a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="d-sm-flex justify-content-between align-items-center mb-4" style="padding-right: 32px;">
+                <h2 class="text-dark mb-0">&nbsp; &nbsp;Мои файлы&nbsp;</h2>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <input type="file" class="form-control-file" id="text" name="file" accept=".txt">
+                    </div>
+                    <button style="margin: 4px 0px 0px 0px" type="submit" class="btn btn-primary">Загрузить файл</button>
+                </form>
+            </div>
+            <div class="container-fluid">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <p class="fw-bold text-primary m-0">Работа с файлами</p>
+                    </div>
+                    <div class="card-body pe-xl-5 pb-xl-5">
+                        <div class="row">
+                            <div class="col-md-6 col-lg-4 col-xxl-3 text-nowrap">
+                                <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label
+                                        class="form-label form-label">Показывать по&nbsp;<select
+                                        class="form-select-sm d-inline-block form-select"
+                                        style="padding-right: 0px;margin-right: -32px;">
+                                    <option value="10" selected="">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select></label></div>
+                            </div>
+                            <div class="col-md-6 col-lg-3 col-xxl-4">
+                                <div class="text-md-end dataTables_filter" id="dataTable_filter"><label
+                                        class="form-label form-label"><input class="form-control-sm form-control"
+                                                                             type="search" aria-controls="dataTable"
+                                                                             placeholder="Поиск файлов.."></label></div>
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-primary btn-sm" type="submit">Искать</button>
+                            </div>
                         </div>
-                        <div class="card-body pe-xl-5 pb-xl-5">
-                            <div class="row">
-                                <div class="col-md-6 col-lg-4 col-xxl-3 text-nowrap">
-                                    <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label class="form-label form-label">Показывать по&nbsp;<select class="form-select-sm d-inline-block form-select" style="padding-right: 0px;margin-right: -32px;">
-                                                <option value="10" selected="">10</option>
-                                                <option value="25">25</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                            </select></label></div>
-                                </div>
-                                <div class="col-md-6 col-lg-3 col-xxl-4">
-                                    <div class="text-md-end dataTables_filter" id="dataTable_filter"><label class="form-label form-label"><input class="form-control-sm form-control" type="search" aria-controls="dataTable" placeholder="Поиск файлов.."></label></div>
-                                </div>
-                                <div class="col"><button class="btn btn-primary btn-sm" type="submit">Искать</button></div>
+                        <div class="table-responsive table mt-2" id="dataTable" role="grid"
+                             aria-describedby="dataTable_info"
+                             style="padding-bottom: 0px;margin-bottom: 5px;padding-right: 0px;margin-right: 5px;">
+                            <table class="table my-0" id="dataTable">
+                                <thead>
+                                <tr>
+                                    <td><strong>Имя файла</strong></td>
+                                    <td><strong>Дата изменения</strong></td>
+                                    <td><strong>Размер</strong></td>
+                                    <td><strong>Изменить</strong></td>
+                                    <td><strong>Удалить</strong></td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    {% for document in documents %}
+                                        <td>{{ document.name }}</td>
+                                        <td>{{ document.last_modified }}</td>
+                                        <td>{{ document.size }}</td>
+                                        <td><a class="btn btn-info btn-icon-split" role="button"
+                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                                class="fas fa-info-circle"></i></span><span class="text-white text">Изменить</span></a>
+                                        </td>
+                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                               href="/delete_document/{{ document.id }}"><i
+                                                class="fas fa-trash text-white"></i></a></td>
+                                    {% endfor %}
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 align-self-center">
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                    1, всего 1</p>
                             </div>
-                            <div class="table-responsive table mt-2" id="dataTable" role="grid" aria-describedby="dataTable_info" style="padding-bottom: 0px;margin-bottom: 5px;padding-right: 0px;margin-right: 5px;">
-                                <table class="table my-0" id="dataTable">
-                                    <thead>
-                                        <tr>
-                                            <td><strong>Имя файла</strong></td>
-                                            <td><strong>Дата изменения</strong></td>
-                                            <td><strong>Размер</strong></td>
-                                            <td><strong>Изменить</strong></td>
-                                            <td><strong>Удалить</strong></td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            {% for document in documents %}
-                                                <td>{{ document.name }}</td>
-                                                <td>{{ document.last_modified }}</td>
-                                                <td>{{ document.size }}</td>
-                                                <td><a class="btn btn-info btn-icon-split" role="button" href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i class="fas fa-info-circle"></i></span><span class="text-white text">Изменить</span></a></td>
-                                                <td><a class="btn btn-danger btn-circle ms-1" role="button" href="/delete_document/{{ document.id }}"><i class="fas fa-trash text-white"></i></a></td>
-                                            {% endfor %}
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 align-self-center">
-                                    <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано 1, всего 1</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                                        <ul class="pagination">
-                                            <li class="page-item disabled"><a class="page-link" href="#" aria-label="Previous"></a></li>
-                                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                            <li class="page-item"><a class="page-link" href="#" aria-label="Next"></a></li>
-                                        </ul>
-                                    </nav>
-                                </div>
+                            <div class="col-md-6">
+                                <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                                    <ul class="pagination">
+                                        <li class="page-item disabled"><a class="page-link" href="#"
+                                                                          aria-label="Previous"></a></li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item"><a class="page-link" href="#" aria-label="Next"></a></li>
+                                    </ul>
+                                </nav>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <footer class="bg-white sticky-footer">
-                <div class="container my-auto">
-                    <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
-                </div>
-            </footer>
-        </div><a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+        </div>
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
+            </div>
+        </footer>
     </div>
-    <script src="../static/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../static/js/theme.js"></script>
+    <a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+</div>
+<script src="../static/bootstrap/js/bootstrap.min.js"></script>
+<script src="../static/js/theme.js"></script>
 </body>
 
 </html>

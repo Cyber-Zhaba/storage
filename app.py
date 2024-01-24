@@ -1,3 +1,9 @@
+import asyncio
+import os
+import shutil
+
+from werkzeug.utils import secure_filename
+
 from data import db_session
 import configparser
 import datetime
@@ -15,16 +21,22 @@ from gevent import monkey
 from gevent.pywsgi import WSGIServer
 from models.users import User
 from models.documents import Document
+from models.servers import Server
 from forms.FileForm import AddDocumentsForm
 from requests import get, post, delete, put
 from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
+from forms.ServerForm import AddServerForm
 from data.user_service import UserResource, UserListResource
+from data.document_service import DocumentResource, DocumentListResource
+from storage_communication import *
+from data.server_service import ServerResource, ServerListResource
 
 app = Flask(__name__)
 api = Api(app)
 login_manager = LoginManager(app)
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'prev_prof_lovers_secret_key'
+app.config['UPLOAD_FOLDER'] = './files'
 
 
 @app.errorhandler(404)
@@ -69,7 +81,6 @@ def sign_up():
                     'password': form.password.data},
                      timeout=(2, 20))
                 user = session.query(User).filter(User.login == f'{form.login.data}').first()
-                print(form.remember_me.data, user)
                 login_user(user, remember=form.remember_me.data)
                 return redirect("/", 301)
             session.close()
@@ -93,7 +104,11 @@ def login():
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page():
-    return render_template('main.html', title='Главная страница')
+    user_id = 0
+    if not current_user.is_anonymous:
+        user_id = current_user.id
+    return render_template('main.html', title='Главная страница', is_anonymous=current_user.is_anonymous,
+                           user_id=user_id)
 
 
 @app.route('/user_profile/<int:user_id>', methods=['GET', 'POST'])
@@ -102,6 +117,8 @@ def user_profile(user_id):
     if current_user.id != user_id:
         abort(404)
     message, form = '', EditUserForm()
+    user = get(f'http://localhost:5000/api/users/{user_id}').json()['user']
+    form.email.data, form.login.data = user['email'], user['login']
     if request.method == 'POST':
         if form.validate_on_submit() and (form.login.data != '' or form.email.data != ''):
             session = db_session.create_session()
@@ -121,19 +138,67 @@ def user_profile(user_id):
 def user_table_files(user_id):
     if current_user.id != user_id:
         abort(404)
-    message, form = '', AddDocumentsForm()
     session = db_session.create_session()
     documents = session.query(Document).filter(Document.owner_id == user_id)
     if documents is None:
         documents = []
-    if form.validate_on_submit():
-        pass
+    if request.method == 'POST':
+        document = request.files['file']
+        name_of_document = secure_filename(document.filename)
+        document.save(f'./files/{name_of_document}')
+        with open(f'./files/{name_of_document}') as file:
+            doc = post('http://localhost:5000/api/documents', json={
+                'name': name_of_document,
+                'owner_id': user_id,
+                'size': os.path.getsize(f'./files/{name_of_document}'),
+                'number_of_lines': len(file.readlines())},
+                       timeout=(2, 20)).json()['document']
+        asyncio.run(
+            manage("add", doc['id'], name_of_document, get('http://localhost:5000/api/servers').json()['servers'],
+                   file_folder="./files/"))
+        os.remove(f'./files/{name_of_document}')
+    session.close()
     return render_template('/user_pages/user_table_files.html', title='Главная страница', documents=documents,
                            user_id=user_id)
+
+
+@app.route('/delete_document/<int:file_id>')
+@login_required
+def delete_file(file_id):
+    document = get(f'http://localhost:5000/api/documents/{file_id}').json()
+    if document['document']['owner_id'] == current_user.id or current_user.admin == 1:
+        delete(f'http://localhost:5000/api/documents/{file_id}')
+        asyncio.run(
+            manage("delete", file_id, document['document']['name'], get('http://localhost:5000/api/servers').json()['servers']))
+        return redirect(f'/user_table_files/{current_user.id}', 200)
+    abort(404)
+
+
+@app.route('/add_server', methods=['GET', 'POST'])
+@login_required
+def add_server():
+    if current_user.admin == 1:
+        form = AddServerForm()
+        if request.method == 'POST':
+            if form.validate_on_submit():
+                t, _, f = shutil.disk_usage("/")
+                post('http://localhost:5000/api/servers', json={
+                    'name': form.name.data,
+                    'host': form.address.data,
+                    'port': form.port.data,
+                    'capacity': t // (2 ** 30),
+                    'ended_capacity': f // (2 ** 30)
+                }, timeout=(2, 20))
+        return render_template('/admin_pages/add_server.html', form=form)
+    return abort(404)
 
 
 if __name__ == '__main__':
     api.add_resource(UserListResource, '/api/users')
     api.add_resource(UserResource, '/api/users/<int:user_id>')
+    api.add_resource(DocumentListResource, '/api/documents')
+    api.add_resource(DocumentResource, '/api/documents/<int:document_id>')
+    api.add_resource(ServerListResource, '/api/servers')
+    api.add_resource(ServerResource, '/api/servers/<int:server_id>')
     db_session.global_init("data/data.db")
     app.run(debug=True, host='0.0.0.0')
