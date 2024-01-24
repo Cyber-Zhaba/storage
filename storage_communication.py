@@ -248,7 +248,11 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
     - Get file "a.txt", id 15 from storage and download in "tmp" root
     asyncio.run(manage("get", 15, "file.txt", debug_storages, destination_folder="tmp"))
 
-    - Edit file
+    - Edit file "a.txt"
+    asyncio.run(manage("edit", 15, "a.txt", debug_storages))
+
+    - Find substring "SDh" in file "a.txt"
+    asyncio.run(manage("find", 15, "a.txt", debug_storages, substring="SDh", number_of_lines=50))
 
 
     :param mode: mode of managing. Can be "add", "delete", "get", "edit", "find"
