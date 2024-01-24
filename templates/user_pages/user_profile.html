@@ -16,12 +16,12 @@
 <body id="page-top">
     <div id="wrapper">
         <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
-            <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#"><div class="sidebar-brand-icon rotate-n-15"></div><div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div></a>
+            <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="/"><div class="sidebar-brand-icon rotate-n-15"></div><div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div></a>
                 <hr class="sidebar-divider my-0">
                 <ul class="navbar-nav text-light" id="accordionSidebar">
                     <li class="nav-item"></li>
-                    <li class="nav-item"><a class="nav-link active" href="user_profile.html"><span>Аккаунт</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="user_table_files.html"><span>Все файлы</span></a></li>
+                    <li class="nav-item"><a class="nav-link active"><span>Аккаунт</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/user_table_files/{{ user_id }}"><span>Все файлы</span></a></li>
                     <li class="nav-item"></li>
                     <li class="nav-item"></li>
                     <li class="nav-item"></li>
@@ -35,8 +35,8 @@
                     <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop-1" type="button"><i class="fas fa-bars"></i></button>
                         <ul class="navbar-nav flex-nowrap ms-auto">
                             <li class="nav-item dropdown no-arrow">
-                                <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="#"><span class="d-none d-lg-inline me-2 text-gray-600 small">Username</span></a>
-                                    <div class="shadow dropdown-menu dropdown-menu-end animated--grow-in"><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Logout</a></div>
+                                <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" aria-expanded="false" data-bs-toggle="dropdown" href="/logout"><span class="d-none d-lg-inline me-2 text-gray-600 small">Username</span></a>
+                                    <div class="shadow dropdown-menu dropdown-menu-end animated--grow-in"><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Logout</a></div>
                                 </div>
                             </li>
                         </ul>
@@ -53,16 +53,30 @@
                                             <p class="fw-bold text-primary m-0">Личные данные&nbsp;</p>
                                         </div>
                                         <div class="card-body">
-                                            <form>
+                                            <form action="" method="post" style="background-color: transparent"> {{ form.hidden_tag() }}
                                                 <div class="row">
                                                     <div class="col">
-                                                        <div class="mb-3"><label class="form-label form-label form-label" for="username"><strong>Username</strong></label><input class="form-control form-control form-control" type="text" id="username" placeholder="Username" name="username"></div>
+                                                        <div class="mb-3"> {{ form.login.label }}
+                                                            {{ form.login(class="form-control") }}
+                                                            {% for error in form.login.errors %}
+                                                                <div class="alert alert-danger" role="alert"> {{ error }}</div>
+                                                            {% endfor %}
+                                                        </div>
                                                     </div>
                                                     <div class="col">
-                                                        <div class="mb-3"><label class="form-label form-label form-label" for="email"><strong>Email</strong></label><input class="form-control form-control form-control" type="email" id="email" placeholder="user@example.com" name="email"></div>
+                                                        <div class="mb-3"> {{ form.email.label }}
+                                                            {{ form.email(class="form-control") }}
+                                                            {% for error in form.email.errors %}
+                                                                <div class="alert alert-danger" role="alert"> {{ error }}</div>
+                                                            {% endfor %}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="mb-3"><button class="btn btn-primary btn-sm" type="submit">Сохранить</button></div>
+                                                <div class="d-grid">
+                                                    <button type="submit" id="submit" name="submit" value="Submit"
+                                                            class="btn btn-primary">сохранить
+                                                    </button>
+                                                </div>
                                             </form>
                                         </div>
                                     </div>

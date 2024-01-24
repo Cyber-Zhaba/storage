@@ -13,5 +13,9 @@ class Document(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
-    filename = sqlalchemy.Column(sqlalchemy.String, nullable=True, unique=True)
-    last_change = sqlalchemy.Column(sqlalchemy.DATETIME, default=datetime.datetime.now)
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    owner_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
+    last_modified = sqlalchemy.Column(sqlalchemy.DATETIME, default=datetime.datetime.now, nullable=True)
+    size = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    amount_of_lines = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    version = sqlalchemy.Column(sqlalchemy.String, nullable=True)

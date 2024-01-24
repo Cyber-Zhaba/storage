@@ -21,6 +21,16 @@ class UserResource(Resource):
         self.session.commit()
         return jsonify({'status': 'OK'})
 
+    def put(self, user_id: int):
+        args = self.parser.parse_args()
+        user = self.session.query(User).get(user_id)
+        if args['login'] != '':
+            setattr(user, 'login', args['login'])
+        if args['email'] != '':
+            setattr(user, 'email', args['email'])
+        self.session.commit()
+        return jsonify({'status': 'OK'})
+
 
 class UserListResource(Resource):
     def __init__(self):
@@ -44,6 +54,4 @@ class UserListResource(Resource):
         users.set_password(args['password'])
         self.session.add(users)
         self.session.commit()
-        print(users)
         return jsonify({'status': 'OK'})
-

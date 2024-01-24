@@ -14,8 +14,10 @@ from flask_restful import Api, abort
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
 from models.users import User
+from models.documents import Document
+from forms.FileForm import AddDocumentsForm
 from requests import get, post, delete, put
-from forms.SignUpForm import SignUpForm, LoginForm
+from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
 from data.user_service import UserResource, UserListResource
 
 app = Flask(__name__)
@@ -27,8 +29,10 @@ app.config['SECRET_KEY'] = 'prev_prof_lovers_secret_key'
 
 @app.errorhandler(404)
 def not_found(error):
-    print(error)
-    return render_template('404.html')
+    if current_user.admin == 1:
+        return render_template('admin_pages/admin_404.html')
+    else:
+        return render_template('user_pages/user_404.html')
 
 
 @app.route('/logout')
@@ -65,6 +69,7 @@ def sign_up():
                     'password': form.password.data},
                      timeout=(2, 20))
                 user = session.query(User).filter(User.login == f'{form.login.data}').first()
+                print(form.remember_me.data, user)
                 login_user(user, remember=form.remember_me.data)
                 return redirect("/", 301)
             session.close()
@@ -91,19 +96,38 @@ def main_page():
     return render_template('main.html', title='Главная страница')
 
 
-@app.route('/profile', methods=['GET', 'POST'])
-def profile():
-    return render_template('profile.html', title='Главная страница')
+@app.route('/user_profile/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def user_profile(user_id):
+    message, form = '', EditUserForm()
+    if request.method == 'POST':
+        if form.validate_on_submit() and (form.login.data != '' or form.email.data != ''):
+            session = db_session.create_session()
+            put(f'http://localhost:5000/api/users/{current_user.id}', json={
+                'login': form.login.data,
+                'email': form.email.data},
+                timeout=(2, 20))
+            session.close()
+            return redirect(f"/user_profile/{user_id}", 301)
+    return render_template('/user_pages/user_profile.html', title='Главная страница', form=form, user_id=user_id)
 
 
-@app.route('/user_profile', methods=['GET', 'POST'])
-def user_profile():
-    return render_template('user_profile.html', title='Главная страница')
-
+@app.route('/user_table_files/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def user_table_files(user_id):
+    message, form = '', AddDocumentsForm()
+    session = db_session.create_session()
+    documents = session.query(Document).filter(Document.owner_id == user_id)
+    if documents is None:
+        documents = []
+    if form.validate_on_submit():
+        pass
+    return render_template('/user_pages/user_table_files.html', title='Главная страница', documents=documents,
+                           user_id=user_id)
 
 
 if __name__ == '__main__':
     api.add_resource(UserListResource, '/api/users')
-    api.add_resource(UserResource, '/api/<int:user_id>')
+    api.add_resource(UserResource, '/api/users/<int:user_id>')
     db_session.global_init("data/data.db")
     app.run(debug=True, host='0.0.0.0')
