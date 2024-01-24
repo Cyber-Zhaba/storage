@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = 'prev_prof_lovers_secret_key'
 
 @app.errorhandler(404)
 def not_found(error):
-    if current_user.admin == 1:
+    if current_user.is_anonymous == 0 and current_user.admin == 1:
         return render_template('admin_pages/admin_404.html')
     else:
         return render_template('user_pages/user_404.html')
@@ -99,6 +99,8 @@ def main_page():
 @app.route('/user_profile/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def user_profile(user_id):
+    if current_user.id != user_id:
+        abort(404)
     message, form = '', EditUserForm()
     if request.method == 'POST':
         if form.validate_on_submit() and (form.login.data != '' or form.email.data != ''):
@@ -109,12 +111,16 @@ def user_profile(user_id):
                 timeout=(2, 20))
             session.close()
             return redirect(f"/user_profile/{user_id}", 301)
-    return render_template('/user_pages/user_profile.html', title='Главная страница', form=form, user_id=user_id)
+    if current_user.admin == 0:
+        return render_template('/user_pages/user_profile.html', title='Главная страница', form=form, user_id=user_id)
+    return render_template('/admin_pages/admin_profile.html', title='Главная страница', form=form, user_id=user_id)
 
 
 @app.route('/user_table_files/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def user_table_files(user_id):
+    if current_user.id != user_id:
+        abort(404)
     message, form = '', AddDocumentsForm()
     session = db_session.create_session()
     documents = session.query(Document).filter(Document.owner_id == user_id)
