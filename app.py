@@ -139,9 +139,6 @@ def user_table_files(user_id):
     if current_user.id != user_id:
         abort(404)
     session = db_session.create_session()
-    documents = session.query(Document).filter(Document.owner_id == user_id)
-    if documents is None:
-        documents = []
     if request.method == 'POST':
         document = request.files['file']
         name_of_document = secure_filename(document.filename)
@@ -157,9 +154,28 @@ def user_table_files(user_id):
             manage("add", doc['id'], name_of_document, get('http://localhost:5000/api/servers').json()['servers'],
                    file_folder="./files/"))
         os.remove(f'./files/{name_of_document}')
+    if current_user.admin == 1:
+        documents = session.query(Document).all()
+        print(documents)
+    else:
+        documents = session.query(Document).filter(Document.owner_id == user_id)
+    if documents is None:
+        documents = []
     session.close()
-    return render_template('/user_pages/user_table_files.html', title='Главная страница', documents=documents,
+    if current_user.admin == 0:
+        return render_template('/user_pages/user_table_files.html', title='Главная страница', documents=documents,
+                               user_id=user_id)
+    return render_template('/admin_pages/admin_table_files.html', title='Главная страница', documents=documents,
                            user_id=user_id)
+
+
+@app.route('/admin_server_table')
+@login_required
+def server_table():
+    if current_user.admin == 1:
+        servers = get(f'http://localhost:5000/api/servers').json()['servers']
+        return render_template('/admin_pages/admin_table_serv.html', user_id=current_user.id, servers=servers)
+    return abort(404)
 
 
 @app.route('/delete_document/<int:file_id>')
@@ -169,7 +185,8 @@ def delete_file(file_id):
     if document['document']['owner_id'] == current_user.id or current_user.admin == 1:
         delete(f'http://localhost:5000/api/documents/{file_id}')
         asyncio.run(
-            manage("delete", file_id, document['document']['name'], get('http://localhost:5000/api/servers').json()['servers']))
+            manage("delete", file_id, document['document']['name'],
+                   get('http://localhost:5000/api/servers').json()['servers']))
         return redirect(f'/user_table_files/{current_user.id}', 200)
     abort(404)
 
@@ -189,8 +206,21 @@ def add_server():
                     'capacity': t // (2 ** 30),
                     'ended_capacity': f // (2 ** 30)
                 }, timeout=(2, 20))
+                return redirect('/admin_server_table')
         return render_template('/admin_pages/add_server.html', form=form)
     return abort(404)
+
+
+# @app.route('/delete_server/<int:server_id>', methods=['GET', 'POST'])
+# @login_required
+# def add_server(server_id):
+#     if current_user.admin == 1:
+#         delete(f'http://localhost:5000/api/servers/{server_id}')
+#         asyncio.run(
+#             manage("delete", file_id, document['document']['name'],
+#                    get('http://localhost:5000/api/servers').json()['servers']))
+#         return redirect(f'/user_table_files/{current_user.id}', 200)
+#     abort(404)
 
 
 if __name__ == '__main__':

@@ -62,7 +62,8 @@
                     <div class="form-group">
                         <input type="file" class="form-control-file" id="text" name="file" accept=".txt">
                     </div>
-                    <button style="margin: 4px 0px 0px 0px" type="submit" class="btn btn-primary">Загрузить файл</button>
+                    <button style="margin: 4px 0px 0px 0px" type="submit" class="btn btn-primary">Загрузить файл
+                    </button>
                 </form>
             </div>
             <div class="container-fluid">
@@ -107,20 +108,21 @@
                                 </tr>
                                 </thead>
                                 <tbody>
+                                {% for document in documents %}
                                 <tr>
-                                    {% for document in documents %}
-                                        <td>{{ document.name }}</td>
-                                        <td>{{ document.last_modified }}</td>
-                                        <td>{{ document.size }}</td>
-                                        <td><a class="btn btn-info btn-icon-split" role="button"
-                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
-                                                class="fas fa-info-circle"></i></span><span class="text-white text">Изменить</span></a>
-                                        </td>
-                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
-                                               href="/delete_document/{{ document.id }}"><i
-                                                class="fas fa-trash text-white"></i></a></td>
-                                    {% endfor %}
+                                    <td>{{ document.name }}</td>
+                                    <td>{{ document.last_modified }}</td>
+                                    <td>{{ document.size }}</td>
+                                    <td><a class="btn btn-info btn-icon-split" role="button"
+                                           href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                            class="fas fa-info-circle"></i></span><span
+                                            class="text-white text">Изменить</span></a>
+                                    </td>
+                                    <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                           href="/delete_document/{{ document.id }}"><i
+                                            class="fas fa-trash text-white"></i></a></td>
                                 </tr>
+                                {% endfor %}
                                 </tbody>
                             </table>
                         </div>
