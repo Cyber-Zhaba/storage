@@ -44,8 +44,10 @@ app.config['UPLOAD_FOLDER'] = './files'
 @app.errorhandler(404)
 def not_found(error):
     if current_user.is_anonymous == 0 and current_user.admin == 1:
-        return render_template('admin_pages/admin_404.html',
-                               username=current_user.login)
+        return render_template(
+            'admin_pages/admin_404.html',
+            username=current_user.login
+        )
     else:
         return render_template('user_pages/user_404.html')
 
@@ -87,7 +89,12 @@ def sign_up():
                 login_user(user, remember=form.remember_me.data)
                 return redirect("/", 301)
             session.close()
-    return render_template('sign_up.html', title='Регистрация', form=form, message=message)
+    return render_template(
+        'sign_up.html',
+        title='Регистрация',
+        form=form,
+        message=message
+    )
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -102,7 +109,12 @@ def login():
                 return redirect(f"/user_profile/{user.id}", 301)
             message = "Неправильный логин или пароль"
             session.close()
-    return render_template('login.html', title='Логин', form=form, message=message)
+    return render_template(
+        'login.html',
+        title='Логин',
+        form=form,
+        message=message
+    )
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -110,8 +122,12 @@ def main_page():
     user_id = 0
     if not current_user.is_anonymous:
         user_id = current_user.id
-    return render_template('main.html', title='Главная страница', is_anonymous=current_user.is_anonymous,
-                           user_id=user_id)
+    return render_template(
+        'main.html',
+        title='Главная страница',
+        is_anonymous=current_user.is_anonymous,
+        user_id=user_id
+    )
 
 
 @app.route('/user_profile/<int:user_id>', methods=['GET', 'POST'])
@@ -132,8 +148,20 @@ def user_profile(user_id):
             session.close()
             return redirect(f"/user_profile/{user_id}", 301)
     if current_user.admin == 0:
-        return render_template('/user_pages/user_profile.html', title='Главная страница', form=form, user_id=user_id)
-    return render_template('/admin_pages/admin_profile.html', title='Главная страница', form=form, user_id=user_id)
+        return render_template(
+            '/user_pages/user_profile.html',
+            title='Главная страница',
+            form=form,
+            user_id=user_id,
+            username=current_user.login,
+        )
+    return render_template(
+        '/admin_pages/admin_profile.html',
+        title='Главная страница',
+        form=form,
+        user_id=user_id,
+        username=current_user.login,
+    )
 
 
 @app.route('/user_table_files/<int:user_id>', methods=['GET', 'POST'])
@@ -156,9 +184,13 @@ def user_table_files(user_id):
                     'size': os.path.getsize(f'./files/{name_of_document}'),
                     'number_of_lines': len(file.readlines())},
                            timeout=(2, 20)).json()['document']
-            asyncio.run(
-                manage("add", doc['id'], name_of_document, get('http://localhost:5000/api/servers').json()['servers'],
-                       file_folder="./files/"))
+            asyncio.run(manage(
+                "add",
+                doc['id'],
+                name_of_document,
+                get('http://localhost:5000/api/servers').json()['servers'],
+                file_folder="./files/"
+            ))
             os.remove(f'./files/{name_of_document}')
         except PermissionError:
             pass
@@ -196,7 +228,7 @@ def user_table_files(user_id):
             selected=pagination,
             next=next_p,
             prev=prev_p,
-            username=get(f'http://localhost:5000/api/users/{user_id}').json()["user"]["login"]
+            username=current_user.login,
         )
     return render_template(
         '/admin_pages/admin_table_files.html',
@@ -210,7 +242,7 @@ def user_table_files(user_id):
         selected=pagination,
         next=next_p,
         prev=prev_p,
-        username=get(f'http://localhost:5000/api/users/{user_id}').json()["user"]["login"]
+        username=current_user.login,
     )
 
 
@@ -255,9 +287,12 @@ def delete_file(file_id):
     document = get(f'http://localhost:5000/api/documents/{file_id}').json()
     if document['document']['owner_id'] == current_user.id or current_user.admin == 1:
         delete(f'http://localhost:5000/api/documents/{file_id}')
-        asyncio.run(
-            manage("delete", file_id, document['document']['name'],
-                   get('http://localhost:5000/api/servers').json()['servers']))
+        asyncio.run(manage(
+            "delete",
+            file_id,
+            document['document']['name'],
+            get('http://localhost:5000/api/servers').json()['servers']
+        ))
         return redirect(f'/user_table_files/{current_user.id}', 200)
     abort(404)
 
@@ -278,7 +313,10 @@ def add_server():
                     'ended_capacity': f // (2 ** 30)
                 }, timeout=(2, 20))
                 return redirect('/admin_server_table')
-        return render_template('/admin_pages/add_server.html', form=form)
+        return render_template(
+            '/admin_pages/add_server.html',
+            form=form
+        )
     return abort(404)
 
 
