@@ -6,7 +6,7 @@ import sys
 from logging import info, warning
 from time import sleep
 
-from IPython.terminal.pt_inputhooks import asyncio
+from shutil import rmtree
 from yaml import safe_load
 
 
@@ -52,6 +52,8 @@ def run_server(host: str, port: int) -> None:
                         find_substring(client_socket)
                     case "Copy":
                         copy_files(client_socket)
+                    case "End":
+                        delete_all_files(client_socket)
                     case _:
                         warning("Unknown command")
             except Exception as er:
@@ -213,6 +215,14 @@ def copy_files(client_socket: socket.socket) -> None:
                 client_socket.send(file_data)
                 file_data = file.read(batch_size)
         client_socket.close()
+
+
+def delete_all_files(client_socket: socket.socket):
+    info("Removing root dir...")
+    rmtree("root")
+    info("root dir was successfuly removed")
+    info("Session is ended")
+    exit(0)
 
 
 if __name__ == "__main__":

@@ -320,16 +320,17 @@ def add_server():
     return abort(404)
 
 
-# @app.route('/delete_server/<int:server_id>', methods=['GET', 'POST'])
-# @login_required
-# def add_server(server_id):
-#     if current_user.admin == 1:
-#         delete(f'http://localhost:5000/api/servers/{server_id}')
-#         asyncio.run(
-#             manage("delete", file_id, document['document']['name'],
-#                    get('http://localhost:5000/api/servers').json()['servers']))
-#         return redirect(f'/user_table_files/{current_user.id}', 200)
-#     abort(404)
+@app.route('/delete_server/<int:server_id>', methods=['GET', 'POST'])
+@login_required
+def delete_server(server_id):
+    if current_user.admin == 1:
+        storage = get(f'http://localhost:5000/api/servers/{server_id}').json()['server']
+        asyncio.run(manage(
+            "end", -1, "", [], storage=storage
+        ))
+        delete(f'http://localhost:5000/api/servers/{server_id}')
+        return redirect(f'/admin_server_table', 200)
+    abort(404)
 
 
 if __name__ == '__main__':

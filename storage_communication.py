@@ -15,6 +15,12 @@ basicConfig(
     encoding='utf-8'
 )
 batch_size = 1024
+debug_storages = [
+    {"host": "127.0.0.1", "port": 1111},
+    {"host": "127.0.0.1", "port": 2222},
+    {"host": "127.0.0.1", "port": 3333},
+    {"host": "127.0.0.1", "port": 4444},
+]
 
 
 class Storage(TypedDict):
@@ -228,6 +234,12 @@ def add_server(new_storage: Storage, s: Storage,
     client_socket.send(str(new_storage["port"]).encode())
 
 
+@create_connection
+def end_server(s: Storage,
+               client_socket: socket.socket) -> None:
+    client_socket.send("End".encode())
+
+
 mode2func = {"add": add_file,
              "delete": delete_file,
              "get": get_file,
@@ -237,7 +249,7 @@ mode2func = {"add": add_file,
 
 async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage], *,
                  substring: str = "", lines: int = 0, file_folder: str = "",
-                 destination_folder: str = "", new_storage: Storage = {},
+                 destination_folder: str = "", storage=None,
                  ) -> list[str] | None:
     """Manage storages
 
@@ -267,8 +279,11 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
     :param lines: OPTIONAL amount of lines in file
     :param file_folder: OPTIONAL folder where file is located
     :param destination_folder: OPTIONAL folder where file will be downloaded
+    :param storage: storage
     :return: OPTIONAL result of search substring in file
     """
+    if storage is None:
+        storage = {}
     responses = []
 
     async def create_task(args):  # noqa: ANN202 ANN001
@@ -314,6 +329,8 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
             await asyncio.wait([loop.create_task(create_task(f)) for f in tmp_task])
             return responses
         case "copy":
-            add_server(new_storage, storages[0])
+            add_server(storage, storages[0])
+        case "end":
+            end_server(storage)
         case _:
             warning("Unknown mode")
