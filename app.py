@@ -44,7 +44,8 @@ app.config['UPLOAD_FOLDER'] = './files'
 @app.errorhandler(404)
 def not_found(error):
     if current_user.is_anonymous == 0 and current_user.admin == 1:
-        return render_template('admin_pages/admin_404.html')
+        return render_template('admin_pages/admin_404.html',
+                               username=current_user.login)
     else:
         return render_template('user_pages/user_404.html')
 
@@ -144,20 +145,23 @@ def user_table_files(user_id):
     session = db_session.create_session()
 
     if request.method == 'POST':
-        document = request.files['file']
-        name_of_document = secure_filename(document.filename)
-        document.save(f'./files/{name_of_document}')
-        with open(f'./files/{name_of_document}') as file:
-            doc = post('http://localhost:5000/api/documents', json={
-                'name': name_of_document,
-                'owner_id': user_id,
-                'size': os.path.getsize(f'./files/{name_of_document}'),
-                'number_of_lines': len(file.readlines())},
-                       timeout=(2, 20)).json()['document']
-        asyncio.run(
-            manage("add", doc['id'], name_of_document, get('http://localhost:5000/api/servers').json()['servers'],
-                   file_folder="./files/"))
-        os.remove(f'./files/{name_of_document}')
+        try:
+            document = request.files['file']
+            name_of_document = secure_filename(document.filename)
+            document.save(f'./files/{name_of_document}')
+            with open(f'./files/{name_of_document}') as file:
+                doc = post('http://localhost:5000/api/documents', json={
+                    'name': name_of_document,
+                    'owner_id': user_id,
+                    'size': os.path.getsize(f'./files/{name_of_document}'),
+                    'number_of_lines': len(file.readlines())},
+                           timeout=(2, 20)).json()['document']
+            asyncio.run(
+                manage("add", doc['id'], name_of_document, get('http://localhost:5000/api/servers').json()['servers'],
+                       file_folder="./files/"))
+            os.remove(f'./files/{name_of_document}')
+        except PermissionError:
+            pass
 
     if current_user.admin == 1:
         documents = session.query(Document).all()
@@ -191,7 +195,8 @@ def user_table_files(user_id):
             pages=list(range(1, ceil(total / pagination) + 1)),
             selected=pagination,
             next=next_p,
-            prev=prev_p
+            prev=prev_p,
+            username=get(f'http://localhost:5000/api/users/{user_id}').json()["user"]["login"]
         )
     return render_template(
         '/admin_pages/admin_table_files.html',
@@ -204,7 +209,8 @@ def user_table_files(user_id):
         pages=list(range(1, ceil(total / pagination) + 1)),
         selected=pagination,
         next=next_p,
-        prev=prev_p
+        prev=prev_p,
+        username=get(f'http://localhost:5000/api/users/{user_id}').json()["user"]["login"]
     )
 
 
@@ -213,7 +219,33 @@ def user_table_files(user_id):
 def server_table():
     if current_user.admin == 1:
         servers = get(f'http://localhost:5000/api/servers').json()['servers']
-        return render_template('/admin_pages/admin_table_serv.html', user_id=current_user.id, servers=servers)
+
+        servers = list(servers)
+        pagination = request.args.get("pag")
+        if pagination is None:
+            pagination = 10
+        else:
+            pagination = int(pagination)
+        total = len(servers)
+        page = int(request.args.get('page', 1))
+        servers = servers[(page - 1) * pagination: min(total, page * pagination)]
+        next_p = min(page + 1, ceil(total / pagination))
+        prev_p = max(page - 1, 1)
+
+        return render_template(
+            '/admin_pages/admin_table_serv.html',
+            user_id=current_user.id,
+            servers=servers,
+            current_page=page,
+            pagination=pagination,
+            total_docs=total,
+            pages=list(range(1, ceil(total / pagination) + 1)),
+            selected=pagination,
+            next=next_p,
+            prev=prev_p,
+            total=total,
+            username=get(f'http://localhost:5000/api/users/{current_user.id}').json()["user"]["login"],
+        )
     return abort(404)
 
 

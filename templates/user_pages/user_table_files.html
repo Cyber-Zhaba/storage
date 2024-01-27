@@ -46,7 +46,7 @@
                             <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link"
                                                                        aria-expanded="false" data-bs-toggle="dropdown"
                                                                        href="/logout"><span
-                                    class="d-none d-lg-inline me-2 text-gray-600 small">Username</span></a>
+                                    class="d-none d-lg-inline me-2 text-gray-600 small">{{ username }}</span></a>
                                 <div class="shadow dropdown-menu dropdown-menu-end animated--grow-in"><a
                                         class="dropdown-item" href="/logout"><i
                                         class="fas fa-sign-out-alt fa-sm fa-fw me-2 text-gray-400"></i>&nbsp;Logout</a>
@@ -78,13 +78,15 @@
                                         class="form-label form-label">Показывать по&nbsp;
                                     <form action="" method="get">
                                         <select name="pag"
-                                        class="form-select-sm d-inline-block form-select" style="margin-right: -68px;">
+                                                class="form-select-sm d-inline-block form-select"
+                                                style="margin-right: -68px;">
                                             <option value="10" {% if selected == 10 %} selected {% endif %}>10</option>
                                             <option value="25" {% if selected == 25 %} selected {% endif %}>25</option>
                                             <option value="50" {% if selected == 50 %} selected {% endif %}>50</option>
-                                            <option value="100" {% if selected == 100 %} selected {% endif %}>100</option>
+                                            <option value="100" {% if selected == 100 %} selected {% endif %}>100
+                                            </option>
                                         </select>
-                                        <button type="submit" class="btn btn-primary btn-sm"ё>Выбрать</button>
+                                        <button type="submit" class="btn btn-primary btn-sm" ё>Выбрать</button>
                                     </form>
                                     <script>
                                         // Функция для получения значения GET-параметра из URL
@@ -102,7 +104,7 @@
                                         }
 
                                         // Проверяем, есть ли нужный GET-параметр
-                                        document.addEventListener('DOMContentLoaded', function() {
+                                        document.addEventListener('DOMContentLoaded', function () {
                                             const paramName = 'pag';
                                             const paramValue = '10';
 
@@ -112,7 +114,7 @@
                                             }
                                         });
                                     </script>
-                                </div>
+                                </label></div>
                             </div>
                             <div class="col-md-6 col-lg-3 col-xxl-4">
                                 <div class="text-md-end dataTables_filter" id="dataTable_filter"><label
@@ -139,19 +141,19 @@
                                 </thead>
                                 <tbody>
                                 {% for document in documents %}
-                                <tr>
-                                    <td>{{ document.name }}</td>
-                                    <td>{{ document.last_modified }}</td>
-                                    <td>{{ document.size }}</td>
-                                    <td><a class="btn btn-info btn-icon-split" role="button"
-                                           href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
-                                            class="fas fa-info-circle"></i></span><span
-                                            class="text-white text">Изменить</span></a>
-                                    </td>
-                                    <td><a class="btn btn-danger btn-circle ms-1" role="button"
-                                           href="/delete_document/{{ document.id }}"><i
-                                            class="fas fa-trash text-white"></i></a></td>
-                                </tr>
+                                    <tr>
+                                        <td>{{ document.name }}</td>
+                                        <td>{{ document.last_modified }}</td>
+                                        <td>{{ document.size }}</td>
+                                        <td><a class="btn btn-info btn-icon-split" role="button"
+                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                                class="fas fa-info-circle"></i></span><span
+                                                class="text-white text">Изменить</span></a>
+                                        </td>
+                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                               href="/delete_document/{{ document.id }}"><i
+                                                class="fas fa-trash text-white"></i></a></td>
+                                    </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
@@ -159,21 +161,28 @@
                         <div class="row">
                             <div class="col-md-6 align-self-center">
                                 <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
-                                    1, всего 1</p>
+                                    {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">
                                 <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
                                     <ul class="pagination">
-                                        <li class="page-item"><a class="page-link" href="?pag={{ selected }}&page={{ prev }}"
-                                                                          aria-label="Previous">Предыдущая страница</a></li>
+                                        <li class="page-item"><a class="page-link"
+                                                                 href="?pag={{ selected }}&page={{ prev }}"
+                                                                 aria-label="Previous">Предыдущая страница</a></li>
                                         {% for page in pages %}
                                             {% if page == current_page %}
-                                                <li class="page-item active"><a class="page-link" href="?pag={{ selected }}&page={{ page }}">{{ page }}</a></li>
+                                                <li class="page-item active"><a class="page-link"
+                                                                                href="?pag={{ selected }}&page={{ page }}">{{ page }}</a>
+                                                </li>
                                             {% else %}
-                                                <li class="page-item"><a class="page-link" href="?pag={{ selected }}&page={{ page }}">{{ page }}</a></li>
+                                                <li class="page-item"><a class="page-link"
+                                                                         href="?pag={{ selected }}&page={{ page }}">{{ page }}</a>
+                                                </li>
                                             {% endif %}
                                         {% endfor %}
-                                        <li class="page-item"><a class="page-link" href="?pag={{ selected }}&page={{ next }}" aria-label="Next">Следующая страница</a></li>
+                                        <li class="page-item"><a class="page-link"
+                                                                 href="?pag={{ selected }}&page={{ next }}"
+                                                                 aria-label="Next">Следующая страница</a></li>
                                     </ul>
                                 </nav>
                             </div>
