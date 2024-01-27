@@ -15,12 +15,6 @@ basicConfig(
     encoding='utf-8'
 )
 batch_size = 1024
-debug_storages = [
-    {"host": "127.0.0.1", "port": 1111},
-    {"host": "127.0.0.1", "port": 2222},
-    {"host": "127.0.0.1", "port": 3333},
-    {"host": "127.0.0.1", "port": 4444},
-]
 
 
 class Storage(TypedDict):
@@ -37,7 +31,7 @@ class Storage(TypedDict):
     port: int
 
 
-Mode: TypeAlias = Literal["add", "delete", "get", "edit", "find"]
+Mode: TypeAlias = Literal["add", "delete", "get", "edit", "find", "copy"]
 
 
 def id2scrap(file_id: int) -> str:
@@ -225,6 +219,15 @@ def find_substring(file_id: int, substring: str, start: int, end: int, s: Storag
         return "Substring not found"
 
 
+@create_connection
+def add_server(new_storage: Storage, s: Storage,
+               client_socket: socket.socket) -> None:
+    client_socket.send("Copy".encode())
+    sleep(0.01)
+    client_socket.send(new_storage["host"].encode())
+    client_socket.send(str(new_storage["port"]).encode())
+
+
 mode2func = {"add": add_file,
              "delete": delete_file,
              "get": get_file,
@@ -234,11 +237,12 @@ mode2func = {"add": add_file,
 
 async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage], *,
                  substring: str = "", lines: int = 0, file_folder: str = "",
-                 destination_folder: str = "") -> list[str] | None:
+                 destination_folder: str = "", new_storage: Storage = {},
+                 ) -> list[str] | None:
     """Manage storages
-    
+
     Examples of usage
-    
+
     - Add file "a.txt" located in "downloads", id of file is 15
     asyncio.run(manage("add", 15, "a.txt", storages, file_folder="downloads"))
 
@@ -309,5 +313,7 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
             loop = asyncio.get_event_loop()
             await asyncio.wait([loop.create_task(create_task(f)) for f in tmp_task])
             return responses
+        case "copy":
+            add_server(new_storage, storages[0])
         case _:
             warning("Unknown mode")

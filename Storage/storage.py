@@ -6,6 +6,7 @@ import sys
 from logging import info, warning
 from time import sleep
 
+from IPython.terminal.pt_inputhooks import asyncio
 from yaml import safe_load
 
 
@@ -36,7 +37,6 @@ def run_server(host: str, port: int) -> None:
 
             info(f"Connection from {addr}")
             command = client_socket.recv(batch_size).decode()
-            print(type(client_socket))
 
             try:
                 match command:
@@ -50,6 +50,8 @@ def run_server(host: str, port: int) -> None:
                         edit_file(client_socket)
                     case "Find":
                         find_substring(client_socket)
+                    case "Copy":
+                        copy_files(client_socket)
                     case _:
                         warning("Unknown command")
             except Exception as er:
@@ -178,6 +180,39 @@ def find_substring(client_socket: socket.socket) -> None:
         client_socket.send(';'.join(found_lines).encode())
     else:
         client_socket.send("N".encode())
+
+
+def copy_files(client_socket: socket.socket) -> None:
+    """Copy files from current storage to new one
+
+    :param client_socket:
+    :return:
+    """
+    host = client_socket.recv(batch_size).decode()
+    port = client_socket.recv(batch_size).decode()
+    if not port.isdigit():
+        warning("Wrong Port")
+        return
+    client_socket.close()
+
+    port = int(port)
+    all_files = [f for f in os.listdir('root') if os.path.isfile(os.path.join('root', f))]
+
+    for filename in all_files:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((host, port))
+        client_socket.send("Add".encode())
+        sleep(0.01)
+
+        client_socket.send(filename.encode())
+        sleep(0.01)
+
+        with open(os.path.join('root', filename), 'rb') as file:
+            file_data = file.read(batch_size)
+            while file_data:
+                client_socket.send(file_data)
+                file_data = file.read(batch_size)
+        client_socket.close()
 
 
 if __name__ == "__main__":
