@@ -26,8 +26,8 @@
             <ul class="navbar-nav text-light" id="accordionSidebar">
                 <li class="nav-item"></li>
                 <li class="nav-item"><a class="nav-link" href="/user_profile/{{ user_id }}"><span>Аккаунт</span></a></li>
-                <li class="nav-item"><a class="nav-link active"><span>Все файлы</span></a><a
-                        class="nav-link" href="/admin_server_table"><span>Все сервера</span></a><a class="nav-link"
+                <li class="nav-item"><a class="nav-link active"><span>Все файлы</span></a>
+                    <a class="nav-link" href="/admin_server_table"><span>Все сервера</span></a><a class="nav-link"
                                                                                                      href="/admin_user_table"><span>Пользователи</span></a>
                 </li>
                 <li class="nav-item"></li>
@@ -77,13 +77,77 @@
                         <div class="row">
                             <div class="col-md-6 col-lg-4 col-xl-3 text-nowrap">
                                 <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label
-                                        class="form-label form-label">Показывать по&nbsp;<select
+                                        class="form-label form-label">Показывать по&nbsp;
+                                    <form action="" method="get">
+                                        <select name="pag"
                                         class="form-select-sm d-inline-block form-select" style="margin-right: -68px;">
-                                    <option value="10" selected="">10</option>
-                                    <option value="25">25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select></label></div>
+                                            <option value="10" {% if selected == 10 %} selected {% endif %}>10</option>
+                                            <option value="25" {% if selected == 25 %} selected {% endif %}>25</option>
+                                            <option value="50" {% if selected == 50 %} selected {% endif %}>50</option>
+                                            <option value="100" {% if selected == 100 %} selected {% endif %}>100</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm"ё>Выбрать</button>
+                                    </form>
+                                    <script>
+                                        // Функция для получения значения GET-параметра из URL
+                                        function getQueryParam(name) {
+                                            const urlParams = new URLSearchParams(window.location.search);
+                                            return urlParams.get(name);
+                                        }
+
+                                        // Функция для добавления GET-параметра к текущему URL
+                                        function addQueryParam(name, value) {
+                                            const urlParams = new URLSearchParams(window.location.search);
+                                            urlParams.set(name, value);
+                                            const newUrl = window.location.pathname + '?' + urlParams.toString();
+                                            window.history.replaceState({}, '', newUrl);
+                                        }
+
+                                        // Проверяем, есть ли нужный GET-параметр
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            const paramName = 'pag';
+                                            const paramValue = '10';
+
+                                            if (!getQueryParam(paramName)) {
+                                                // Если параметра нет, добавляем его
+                                                addQueryParam(paramName, paramValue);
+                                            }
+                                        });
+                                    </script>
+<!--                                    <select-->
+<!--                                        name="paginate"-->
+<!--                                        class="form-select-sm d-inline-block form-select" style="margin-right: -68px;">-->
+<!--                                    <option value="10"></option>-->
+<!--                                    <option value="25">25</option>-->
+<!--                                    <option value="50">50</option>-->
+<!--                                    <option value="100">100</option>-->
+<!--                                </select>-->
+<!--                                            <form method="post">-->
+<!--                                            <select id="items" name="selected_item">-->
+<!--                                                <option value="10">10</option>-->
+<!--                                                <option value="25">25</option>-->
+<!--                                                <option value="50">50</option>-->
+<!--                                                <option value="100">100</option>-->
+<!--                                            </select>-->
+<!--                                                <button type="submit" onclick="saveSelectedValue()">Обновить</button>-->
+<!--                                        </form>-->
+<!--                                    <script>-->
+<!--                                    function saveSelectedValue() {-->
+<!--                                        var selectElement = document.getElementById("items");-->
+<!--                                        var selectedValue = selectElement.value;-->
+<!--                                        localStorage.setItem("selectedValue", selectedValue);-->
+<!--                                    }-->
+
+<!--                                    // Проверяем, сохранено ли значение в localStorage-->
+<!--                                    document.addEventListener("DOMContentLoaded", function() {-->
+<!--                                        var savedValue = localStorage.getItem("selectedValue");-->
+<!--                                        if (savedValue !== null) {-->
+<!--                                            var selectElement = document.getElementById("items");-->
+<!--                                            selectElement.value = savedValue;-->
+<!--                                        }-->
+<!--                                    });-->
+<!--                                </script>-->
+                                </label></div>
                             </div>
                             <div class="col-md-6 col-lg-3 col-xl-3">
                                 <div class="text-md-end dataTables_filter" id="dataTable_filter"><label
@@ -132,17 +196,21 @@
                         <div class="row">
                             <div class="col-md-6 align-self-center">
                                 <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
-                                    1, всего 1</p>
+                                    {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">
                                 <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
                                     <ul class="pagination">
-                                        <li class="page-item disabled"><a class="page-link" href="#"
-                                                                          aria-label="Previous"></a></li>
-                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                        <li class="page-item"><a class="page-link" href="#" aria-label="Next"></a></li>
+                                        <li class="page-item"><a class="page-link" href="?pag={{ selected }}&page={{ prev }}"
+                                                                          aria-label="Previous">Предыдущая страница</a></li>
+                                        {% for page in pages %}
+                                            {% if page == current_page %}
+                                                <li class="page-item active"><a class="page-link" href="?pag={{ selected }}&page={{ page }}">{{ page }}</a></li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link" href="?pag={{ selected }}&page={{ page }}">{{ page }}</a></li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <li class="page-item"><a class="page-link" href="?pag={{ selected }}&page={{ next }}" aria-label="Next">Следующая страница</a></li>
                                     </ul>
                                 </nav>
                             </div>

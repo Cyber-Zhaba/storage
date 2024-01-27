@@ -1,7 +1,9 @@
 import asyncio
 import os
 import shutil
+from math import ceil
 
+from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.utils import secure_filename
 
 from data import db_session
@@ -96,7 +98,7 @@ def login():
             user = session.query(User).filter(User.login == form.login.data).first()
             if user and user.check_password(form.password.data):
                 login_user(user, remember=form.remember_me.data)
-                return redirect("/", 301)
+                return redirect(f"/user_profile/{user.id}", 301)
             message = "Неправильный логин или пароль"
             session.close()
     return render_template('login.html', title='Логин', form=form, message=message)
@@ -138,7 +140,9 @@ def user_profile(user_id):
 def user_table_files(user_id):
     if current_user.id != user_id:
         abort(404)
+
     session = db_session.create_session()
+
     if request.method == 'POST':
         document = request.files['file']
         name_of_document = secure_filename(document.filename)
@@ -154,19 +158,54 @@ def user_table_files(user_id):
             manage("add", doc['id'], name_of_document, get('http://localhost:5000/api/servers').json()['servers'],
                    file_folder="./files/"))
         os.remove(f'./files/{name_of_document}')
+
     if current_user.admin == 1:
         documents = session.query(Document).all()
-        print(documents)
     else:
         documents = session.query(Document).filter(Document.owner_id == user_id)
     if documents is None:
         documents = []
+
+    documents = list(documents)
+    pagination = request.args.get("pag")
+    if pagination is None:
+        pagination = 10
+    else:
+        pagination = int(pagination)
+    total = len(documents)
+    page = int(request.args.get('page', 1))
+    documents = documents[(page - 1) * pagination: min(total, page * pagination)]
+    next_p = min(page + 1, ceil(total / pagination))
+    prev_p = max(page - 1, 1)
+
     session.close()
     if current_user.admin == 0:
-        return render_template('/user_pages/user_table_files.html', title='Главная страница', documents=documents,
-                               user_id=user_id)
-    return render_template('/admin_pages/admin_table_files.html', title='Главная страница', documents=documents,
-                           user_id=user_id)
+        return render_template(
+            '/user_pages/user_table_files.html',
+            title='Главная страница',
+            documents=documents,
+            user_id=user_id,
+            current_page=page,
+            pagination=pagination,
+            total_docs=total,
+            pages=list(range(1, ceil(total / pagination) + 1)),
+            selected=pagination,
+            next=next_p,
+            prev=prev_p
+        )
+    return render_template(
+        '/admin_pages/admin_table_files.html',
+        title='Главная страница',
+        documents=documents,
+        user_id=user_id,
+        current_page=page,
+        pagination=pagination,
+        total_docs=total,
+        pages=list(range(1, ceil(total / pagination) + 1)),
+        selected=pagination,
+        next=next_p,
+        prev=prev_p
+    )
 
 
 @app.route('/admin_server_table')

@@ -4,7 +4,7 @@ import os
 import socket
 from logging import INFO, basicConfig, FileHandler, StreamHandler
 from logging import info, warning, error
-from string import ascii_letters, digits
+from string import ascii_lowercase, digits
 from time import sleep
 from typing import TypedDict, TypeAlias, Literal, Callable, Any
 
@@ -46,7 +46,7 @@ def id2scrap(file_id: int) -> str:
     :param file_id: id of file in database
     :return: Name of file in storage
     """
-    alpha = digits + ascii_letters
+    alpha = digits + ascii_lowercase
     base = len(alpha)
     string = ""
     while file_id > 0:
