@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Page Not Found - Любители предпрофа</title>
+    <title>Страница не найдена - Любители предпрофа</title>
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
     <link rel="stylesheet" href="/static/fonts/fontawesome-all.min.css">
@@ -16,15 +16,12 @@
 <body id="page-top">
     <div id="wrapper">
         <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
-            <div class="container-fluid d-flex flex-column p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
-                    <div class="sidebar-brand-icon rotate-n-15"></div>
-                    <div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div>
-                </a>
+            <div class="container-fluid p-0"><a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="/"><div class="sidebar-brand-icon rotate-n-15"></div><div class="sidebar-brand-text mx-3"><span style="font-size: 12px;">Любители предпрофа</span></div></a>
                 <hr class="sidebar-divider my-0">
                 <ul class="navbar-nav text-light" id="accordionSidebar">
                     <li class="nav-item"></li>
-                    <li class="nav-item"><a class="nav-link" href="user_profile.html"><svg></svg><span>Аккаунт</span></a></li>
-                    <li class="nav-item"><a class="nav-link" href="user_table_files.html"><svg></svg><span>Все файлы</span></a></li>
+                    <li class="nav-item"><a class="nav-link active"><span>Аккаунт</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/user_table_files/{{ user_id }}"><span>Мои файлы</span></a></li>
                     <li class="nav-item"></li>
                     <li class="nav-item"></li>
                     <li class="nav-item"></li>
@@ -51,7 +48,7 @@
                             <p class="m-0">404</p>
                         </div>
                         <p class="text-dark mb-5 lead">Страница не найдена.</p>
-                        <p class="text-black-50 mb-0">Похоже что-то не так...</p><a href="/">← Во все файлы</a>
+                        <p class="text-black-50 mb-0">Похоже что-то не так...</p><a style="text-decoration:none" href="/user_table_files/{{ user_id }}">← В мои файлы</a>
                     </div>
                 </div>
             </div>

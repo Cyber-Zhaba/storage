@@ -1,0 +1,13 @@
+APScheduler==3.10.4
+Flask==3.0.1
+Flask-Login==0.6.3
+Flask-RESTful==0.3.10
+Flask-WTF==1.2.1
+gevent==23.9.1
+matplotlib==3.8.2
+requests==2.31.0
+SQLAlchemy==2.0.25
+SQLAlchemy-serializer==1.4.1
+Werkzeug==3.0.1
+WTForms==3.1.2
+

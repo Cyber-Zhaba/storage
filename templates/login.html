@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Login - Любители предпрофа</title>
+    <title>Вход - Любители предпрофа</title>
     <link rel="stylesheet" href="../static/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
@@ -31,7 +31,7 @@
                                 </div>
                                 <form action="" method="post" style="background-color: transparent"> {{
                                     form.hidden_tag() }}
-                                    <div class="card signin" style="background-color: transparent">
+                                    <div class="border-none" style="background-color: transparent">
                                         <div class="mb-3"> {{ form.login.label }}
                                             {{ form.login(class="form-control") }}
                                             {% for error in form.login.errors %}
@@ -57,9 +57,8 @@
                                         {% endif %}
                                     </div>
                                 </form>
-                                <div class="text-center"><a class="small" href="forgot-password.html">Забыли пароль?</a>
-                                </div>
-                                <div class="text-center"><a class="small" href="sign_up">Создать аккаунт</a></div>
+                                <pre>
+                                <div class="text-center"><a class="small" style="text-decoration:none" href="sign_up">Создать аккаунт</a></div>
                             </div>
                         </div>
                     </div>
