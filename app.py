@@ -130,12 +130,13 @@ def login():
                      timeout=(2, 20))
                 return redirect(f"/user_profile/{user.id}", 301)
             message = "Неправильный логин или пароль"
-            post('http://localhost:5000/api/log', json={
-                'type': 2,
-                'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                'object_id': user.get_id(),
-                'owner_id': user.get_id()},
-                 timeout=(2, 20))
+            if user:
+                post('http://localhost:5000/api/log', json={
+                    'type': 2,
+                    'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    'object_id': user.get_id(),
+                    'owner_id': user.get_id()},
+                    timeout=(2, 20))
             session.close()
     return render_template(
         'login.html',
