@@ -22,6 +22,7 @@ from flask_restful import Api, abort
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
 from models.users import User
+from models.logs import Log
 from models.documents import Document
 from models.servers import Server
 from forms.FileForm import AddDocumentsForm
@@ -29,6 +30,7 @@ from requests import get, post, delete, put
 from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
 from forms.ServerForm import AddServerForm
 from data.user_service import UserResource, UserListResource
+from data.logs_service import LogResource, LogsListResource
 from data.document_service import DocumentResource, DocumentListResource
 from storage_communication import *
 from data.server_service import ServerResource, ServerListResource
@@ -56,6 +58,14 @@ def not_found(error):
 @login_required
 def logout():
     """Logout url"""
+    session = db_session.create_session()
+    post('http://localhost:5000/api/log', json={
+        'type': 3,
+        'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+        'object_id': current_user.get_id(),
+        'owner_id': current_user.get_id()},
+         timeout=(2, 20))
+    session.close()
     logout_user()
     return redirect("/")
 
@@ -78,7 +88,7 @@ def sign_up():
             if session.query(User).filter(User.login == f'{form.login.data}').first():
                 message = "Этот логин уже существует"
             elif session.query(User).filter(User.email == f'{form.email.data}').first():
-                message = "Этот email уже привязан к акаунту"
+                message = "Этот email уже привязан к аккаунту"
             else:
                 post('http://localhost:5000/api/users', json={
                     'login': form.login.data,
@@ -87,6 +97,12 @@ def sign_up():
                      timeout=(2, 20))
                 user = session.query(User).filter(User.login == f'{form.login.data}').first()
                 login_user(user, remember=form.remember_me.data)
+                post('http://localhost:5000/api/log', json={
+                    'type': 0,
+                    'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    'object_id': user.get_id(),
+                    'owner_id': user.get_id()},
+                     timeout=(2, 20))
                 return redirect("/", 301)
             session.close()
     return render_template(
@@ -106,8 +122,20 @@ def login():
             user = session.query(User).filter(User.login == form.login.data).first()
             if user and user.check_password(form.password.data):
                 login_user(user, remember=form.remember_me.data)
+                post('http://localhost:5000/api/log', json={
+                    'type': 1,
+                    'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    'object_id': user.get_id(),
+                    'owner_id': user.get_id()},
+                     timeout=(2, 20))
                 return redirect(f"/user_profile/{user.id}", 301)
             message = "Неправильный логин или пароль"
+            post('http://localhost:5000/api/log', json={
+                'type': 2,
+                'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                'object_id': user.get_id(),
+                'owner_id': user.get_id()},
+                 timeout=(2, 20))
             session.close()
     return render_template(
         'login.html',
@@ -145,6 +173,12 @@ def user_profile(user_id):
                 'login': form.login.data,
                 'email': form.email.data},
                 timeout=(2, 20))
+            post('http://localhost:5000/api/log', json={
+                'type': 4,
+                'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                'object_id': user.get_id(),
+                'owner_id': user.get_id()},
+                 timeout=(2, 20))
             session.close()
             return redirect(f"/user_profile/{user_id}", 301)
     if current_user.admin == 0:
@@ -184,6 +218,12 @@ def user_table_files(user_id):
                     'size': os.path.getsize(f'./files/{name_of_document}'),
                     'number_of_lines': len(file.readlines())},
                            timeout=(2, 20)).json()['document']
+                post('http://localhost:5000/api/log', json={
+                    'type': 5,
+                    'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    'object_id': doc['id'],
+                    'owner_id': user_id},
+                     timeout=(2, 20))
             asyncio.run(manage(
                 "add",
                 doc['id'],
@@ -286,6 +326,14 @@ def server_table():
 def delete_file(file_id):
     document = get(f'http://localhost:5000/api/documents/{file_id}').json()
     if document['document']['owner_id'] == current_user.id or current_user.admin == 1:
+        session = db_session.create_session()
+        post('http://localhost:5000/api/log', json={
+            'type': 7,
+            'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+            'object_id': file_id,
+            'owner_id': current_user.get_id()},
+             timeout=(2, 20))
+        session.close()
         delete(f'http://localhost:5000/api/documents/{file_id}')
         asyncio.run(manage(
             "delete",
@@ -305,13 +353,21 @@ def add_server():
         if request.method == 'POST':
             if form.validate_on_submit():
                 t, _, f = shutil.disk_usage("/")
-                post('http://localhost:5000/api/servers', json={
+                serv = post('http://localhost:5000/api/servers', json={
                     'name': form.name.data,
                     'host': form.address.data,
                     'port': form.port.data,
                     'capacity': t // (2 ** 30),
                     'ended_capacity': f // (2 ** 30)
                 }, timeout=(2, 20))
+                session = db_session.create_session()
+                post('http://localhost:5000/api/log', json={
+                    'type': 8,
+                    'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                    'object_id': serv['id'],
+                    'owner_id': current_user.get_id()},
+                     timeout=(2, 20))
+                session.close()
                 return redirect('/admin_server_table')
         return render_template(
             '/admin_pages/add_server.html',
@@ -328,6 +384,14 @@ def delete_server(server_id):
         asyncio.run(manage(
             "end", -1, "", [], storage=storage
         ))
+        session = db_session.create_session()
+        post('http://localhost:5000/api/log', json={
+            'type': 9,
+            'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+            'object_id': server_id,
+            'owner_id': current_user.get_id()},
+             timeout=(2, 20))
+        session.close()
         delete(f'http://localhost:5000/api/servers/{server_id}')
         return redirect(f'/admin_server_table', 200)
     abort(404)
@@ -335,6 +399,7 @@ def delete_server(server_id):
 
 if __name__ == '__main__':
     api.add_resource(UserListResource, '/api/users')
+    api.add_resource(LogsListResource, '/api/log')
     api.add_resource(UserResource, '/api/users/<int:user_id>')
     api.add_resource(DocumentListResource, '/api/documents')
     api.add_resource(DocumentResource, '/api/documents/<int:document_id>')
