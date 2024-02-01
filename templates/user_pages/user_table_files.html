@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Table - Любители предпрофа</title>
+    <title>Мои файлы - Любители предпрофа</title>
+    <link type="image/x-icon" rel="shortcut icon" href="../static/favicons/favicon.ico">
     <link rel="stylesheet" href="../static/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
@@ -27,7 +28,7 @@
                 <li class="nav-item"></li>
                 <li class="nav-item"><a class="nav-link" href="/user_profile/{{ user_id }}"><span>Аккаунт</span></a>
                 </li>
-                <li class="nav-item"><a class="nav-link active"><span>Все файлы</span></a></li>
+                <li class="nav-item"><a class="nav-link active"><span>Мои файлы</span></a></li>
                 <li class="nav-item"></li>
                 <li class="nav-item"></li>
                 <li class="nav-item"></li>
@@ -80,10 +81,10 @@
                                         <select name="pag"
                                                 class="form-select-sm d-inline-block form-select"
                                                 style="margin-right: -68px;">
-                                            <option value="10" {% if selected == 10 %} selected {% endif %}>10</option>
-                                            <option value="25" {% if selected == 25 %} selected {% endif %}>25</option>
-                                            <option value="50" {% if selected == 50 %} selected {% endif %}>50</option>
-                                            <option value="100" {% if selected == 100 %} selected {% endif %}>100
+                                            <option value="10" {% if selected== 10 %} selected {% endif %}>10</option>
+                                            <option value="25" {% if selected== 25 %} selected {% endif %}>25</option>
+                                            <option value="50" {% if selected== 50 %} selected {% endif %}>50</option>
+                                            <option value="100" {% if selected== 100 %} selected {% endif %}>100
                                             </option>
                                         </select>
                                         <button type="submit" class="btn btn-primary btn-sm" ё>Выбрать</button>
@@ -113,6 +114,7 @@
                                                 addQueryParam(paramName, paramValue);
                                             }
                                         });
+
                                     </script>
                                 </label></div>
                             </div>
@@ -141,19 +143,19 @@
                                 </thead>
                                 <tbody>
                                 {% for document in documents %}
-                                    <tr>
-                                        <td>{{ document.name }}</td>
-                                        <td>{{ document.last_modified }}</td>
-                                        <td>{{ document.size }}</td>
-                                        <td><a class="btn btn-info btn-icon-split" role="button"
-                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
-                                                class="fas fa-info-circle"></i></span><span
-                                                class="text-white text">Изменить</span></a>
-                                        </td>
-                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
-                                               href="/delete_document/{{ document.id }}"><i
-                                                class="fas fa-trash text-white"></i></a></td>
-                                    </tr>
+                                <tr>
+                                    <td>{{ document.name }}</td>
+                                    <td>{{ document.last_modified }}</td>
+                                    <td>{{ document.size }}</td>
+                                    <td><a class="btn btn-info btn-icon-split" role="button"
+                                           href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                            class="fas fa-info-circle"></i></span><span
+                                            class="text-white text">Изменить</span></a>
+                                    </td>
+                                    <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                           href="/delete_document/{{ document.id }}"><i
+                                            class="fas fa-trash text-white"></i></a></td>
+                                </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
@@ -170,15 +172,17 @@
                                                                  href="?pag={{ selected }}&page={{ prev }}"
                                                                  aria-label="Previous">Предыдущая страница</a></li>
                                         {% for page in pages %}
-                                            {% if page == current_page %}
-                                                <li class="page-item active"><a class="page-link"
-                                                                                href="?pag={{ selected }}&page={{ page }}">{{ page }}</a>
-                                                </li>
-                                            {% else %}
-                                                <li class="page-item"><a class="page-link"
-                                                                         href="?pag={{ selected }}&page={{ page }}">{{ page }}</a>
-                                                </li>
-                                            {% endif %}
+                                        {% if page == current_page %}
+                                        <li class="page-item active"><a class="page-link"
+                                                                        href="?pag={{ selected }}&page={{ page }}">{{
+                                            page }}</a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item"><a class="page-link"
+                                                                 href="?pag={{ selected }}&page={{ page }}">{{ page
+                                            }}</a>
+                                        </li>
+                                        {% endif %}
                                         {% endfor %}
                                         <li class="page-item"><a class="page-link"
                                                                  href="?pag={{ selected }}&page={{ next }}"
