@@ -69,11 +69,16 @@ def create_connection(func: Callable[..., Any]) -> Callable:
             error("Couldn't find storage in args")
             return
 
-        client_socket.connect((host, port))
-        info(f"Connected to {host}:{port}")
+        try:
+            client_socket.connect((host, port))
+            info(f"Connected to {host}:{port}")
 
-        result = func(*args, client_socket, **kwargs)
-        client_socket.close()
+            result = func(*args, client_socket, **kwargs)
+            client_socket.close()
+        except ConnectionRefusedError:
+            error(f"Couldn't connect to {host}:{port}")
+            result = None
+
         return result
 
     return wrapper
@@ -217,12 +222,21 @@ def find_substring(file_id: int, substring: str, start: int, end: int, s: Storag
     client_socket.send(str(end).encode())
     sleep(0.01)
 
-    result = client_socket.recv(batch_size).decode()
+    result = None
+    while not result:
+        result = client_socket.recv(batch_size).decode()
+
     if result == "Y":
-        line_numbers = client_socket.recv(batch_size).decode()
+        received = client_socket.recv(batch_size).decode()
+        line_numbers = received
+        while received:
+            received = client_socket.recv(batch_size)
+            line_numbers += received.decode()
         return f"Substring found in line {line_numbers}"
-    else:
+    elif result == "N":
         return "Substring not found"
+    else:
+        return f"Something went wrong -> {result}"
 
 
 @create_connection
@@ -261,8 +275,8 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
     - Delete file "a.txt", id of file 15
     asyncio.run(manage("delete", 15, "a.txt", storages))
 
-    - Get file "a.txt", id 15 from storage and download in "tmp" root
-    asyncio.run(manage("get", 15, "file.txt", debug_storages, destination_folder="tmp"))
+    - Get file "a.txt", id 15 from storage and download in "local" root
+    asyncio.run(manage("get", 15, "file.txt", debug_storages, destination_folder="local"))
 
     - Edit file "a.txt"
     asyncio.run(manage("edit", 15, "a.txt", debug_storages))
@@ -319,7 +333,7 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
                 if i == len(storages) - 1:
                     amount_of_lines = lines - line
 
-                info(f"{line} {line + amount_of_lines}")
+                info(f"Split by {line}:{line + amount_of_lines}")
                 tmp_task.append(
                     (f, file_id, substring, line, line + amount_of_lines, storage)
                 )

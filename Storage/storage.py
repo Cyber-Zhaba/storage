@@ -37,6 +37,7 @@ def run_server(host: str, port: int) -> None:
 
             info(f"Connection from {addr}")
             command = client_socket.recv(batch_size).decode()
+            info(f"Received command: {command}")
 
             try:
                 match command:
@@ -126,11 +127,11 @@ def edit_file(client_socket: socket.socket) -> None:
     current_batch_size = int(client_socket.recv(batch_size).decode())
     filename = "root\\" + filename
 
-    os.rename(filename, filename + ".tmp")
+    os.rename(filename, filename + ".local")
     aborted = False
 
     with open(filename, 'wb') as file:
-        with open(filename + ".tmp", 'rb') as tmp_file:
+        with open(filename + ".local", 'rb') as tmp_file:
             tmp_file_data = tmp_file.read(current_batch_size)
             while tmp_file_data:
                 edited = None
@@ -150,7 +151,7 @@ def edit_file(client_socket: socket.socket) -> None:
                     file.write(new_file_data)
                 tmp_file_data = tmp_file.read(current_batch_size)
 
-    os.remove(filename + ".tmp")
+    os.remove(filename + ".local")
     if not aborted:
         info(f"{filename} edited successfully")
 
@@ -166,22 +167,26 @@ def find_substring(client_socket: socket.socket) -> None:
     start_line = int(client_socket.recv(batch_size).decode())
     end_line = int(client_socket.recv(batch_size).decode())
 
+    info(f"Searching for {substring} in {filename} from {start_line} to {end_line}")
+
     line_number = 0
     found_lines = []
     with open("root\\" + filename, 'r') as file:
         while line := file.readline():
             line_number += 1
-            if start_line <= line_number <= end_line:
+            if start_line <= line_number <= end_line + 1:
                 if substring in line:
                     found_lines.append(str(line_number))
-            elif end_line < line_number:
+            elif end_line + 1 < line_number:
                 break
     if found_lines:
         client_socket.send("Y".encode())
-        sleep(0.01)
+        sleep(0.05)
         client_socket.send(';'.join(found_lines).encode())
+        info(f"Found {len(found_lines)} lines")
     else:
         client_socket.send("N".encode())
+        info("Substring not found")
 
 
 def copy_files(client_socket: socket.socket) -> None:

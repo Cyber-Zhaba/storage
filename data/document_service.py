@@ -28,6 +28,12 @@ class DocumentResource(Resource):
         self.session.commit()
         return jsonify({'status': 'OK'})
 
+    def patch(self, document_id: int):
+        args = self.parser.parse_args()
+        self.session.query(Document).filter(Document.id == document_id).update(args)
+        self.session.commit()
+        return jsonify({'status': 'OK'})
+
 
 class DocumentListResource(Resource):
     def __init__(self):

@@ -16,6 +16,7 @@ import matplotlib.dates as dates
 import matplotlib.pyplot as plt
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, request, url_for
+from markupsafe import Markup
 from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
@@ -25,7 +26,7 @@ from models.users import User
 from models.documents import Document
 from models.servers import Server
 from forms.FileForm import AddDocumentsForm
-from requests import get, post, delete, put
+from requests import get, post, delete, put, patch
 from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
 from forms.ServerForm import AddServerForm
 from data.user_service import UserResource, UserListResource
@@ -312,6 +313,13 @@ def add_server():
                     'capacity': t // (2 ** 30),
                     'ended_capacity': f // (2 ** 30)
                 }, timeout=(2, 20))
+
+                asyncio.run(manage(
+                    "copy", 0, "",
+                    [get('http://localhost:5000/api/servers').json()['servers'][0]],
+                    storage={"host": form.address.data, "port": int(form.port.data)}
+                ))
+
                 return redirect('/admin_server_table')
         return render_template(
             '/admin_pages/add_server.html',
@@ -331,6 +339,108 @@ def delete_server(server_id):
         delete(f'http://localhost:5000/api/servers/{server_id}')
         return redirect(f'/admin_server_table', 200)
     abort(404)
+
+
+@app.route('/edit_document/<int:file_id>', methods=['GET', 'POST'])
+@login_required
+def edit_document(file_id):
+    doc = get(f'http://localhost:5000/api/documents/{file_id}').json()['document']
+    if doc["owner_id"] != current_user.id and current_user.admin != 1:
+        abort(404)
+        return
+    lines = [-1]
+
+    if request.method == 'POST':
+        try:
+            document = request.files['file']
+            name_of_document = doc['name']
+            document.save(f'./files/{name_of_document}')
+            with open(f'./files/{name_of_document}') as file:
+                patch(f'http://localhost:5000/api/documents/{file_id}', json={
+                    'name': name_of_document,
+                    'version': doc['version'] + 1,
+                    'owner_id': current_user.id,
+                    'size': os.path.getsize(f'./files/{name_of_document}'),
+                    'number_of_lines': len(file.readlines())},
+                    timeout=(2, 20))
+            asyncio.run(manage(
+                "add",
+                doc['id'],
+                name_of_document,
+                get('http://localhost:5000/api/servers').json()['servers'],
+                file_folder="./files/"
+            ))
+            os.remove(f'./files/{name_of_document}')
+        except PermissionError:
+            pass
+        except KeyError:
+            text = request.form['text'].replace('\r', '')
+            with open("./files/local/" + doc['name'], 'w') as file:
+                file.write(text)
+            with open("./files/local/" + doc['name'], 'r') as file:
+                patch(f'http://localhost:5000/api/documents/{file_id}', json={
+                    'name': doc['name'],
+                    'version': doc['version'] + 1,
+                    'owner_id': current_user.id,
+                    'size': os.path.getsize(f'./files/local/{doc["name"]}'),
+                    'number_of_lines': len(file.readlines())},
+                      timeout=(2, 20))
+            asyncio.run(manage(
+                "add", doc['id'], doc['name'],
+                get('http://localhost:5000/api/servers').json()['servers'],
+                file_folder="./files/local/"
+            ))
+
+    asyncio.run(manage(
+        "get", file_id, doc['name'],
+        get('http://localhost:5000/api/servers').json()['servers'],
+        destination_folder="./files/local/"
+    ))
+    with open(f'./files/local/{doc["name"]}') as file:
+        text = file.read()
+
+    if request.method == 'GET':
+        if request.args.get("substr") is not None:
+            substr = request.args.get("substr")
+            find_result = asyncio.run(manage(
+                "find",
+                file_id,
+                doc['name'],
+                get('http://localhost:5000/api/servers').json()['servers'],
+                substring=substr,
+                lines=doc['number_of_lines'],
+            ))
+            rows = [list(map(int, filter(lambda t: t.isdigit(), x.split()[-1].split(';'))))
+                    for x in find_result if x != "Substring not found"]
+            # Make from [[1, 2, 3], [4], [5, 6]] -> [1, 2, 3, 4, 5, 6]
+            rows = sorted([x for row in rows for x in row])
+            with open(f'./files/local/{doc["name"]}') as file:
+                lines = file.readlines()
+
+            # Apply row mask
+            lines = [[i, substr,
+                     Markup(f'<mark>{substr}</mark>'.join(lines[i - 1].split(substr)))]
+                     for i in rows]
+
+    os.remove(f'./files/local/{doc["name"]}')
+
+    page = '/admin_pages/admin_work_with_file.html' if current_user.admin == 1 \
+        else '/user_pages/user_work_with_file.html'
+    if lines == [-1]:
+        showtable = 1
+    elif lines:
+        showtable = 2
+    else:
+        showtable = 3
+    return render_template(
+        page,
+        filename=Markup(f"<b>{doc['name']}</b>"),
+        user_id=current_user.id,
+        username=current_user.login,
+        findlines=lines,
+        showtable=showtable,
+        text=text,
+    )
 
 
 if __name__ == '__main__':
