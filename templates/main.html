@@ -34,18 +34,18 @@
                 <li class="nav-item"></li>
             </ul>
             {% if is_anonymous == 1 %}
-                <button onclick="location.href='/login'" class="btn btn-primary link-primary text-bg-light"
-                        style="margin-right: 5px;margin-top: 5px;margin-bottom: 5px;" type="button">Войти
-                </button>
-                <button onclick="location.href='/sign_up'" class="btn btn-primary link-primary text-bg-light"
-                        style="margin-right: 5px;margin-top: 5px;margin-bottom: 5px;" type="button">Зарегистрироваться
-                </button>
+            <button onclick="location.href='/login'" class="btn btn-primary link-primary text-bg-light"
+                    style="margin-right: 5px;margin-top: 5px;margin-bottom: 5px;" type="button">Войти
+            </button>
+            <button onclick="location.href='/sign_up'" class="btn btn-primary link-primary text-bg-light"
+                    style="margin-right: 5px;margin-top: 5px;margin-bottom: 5px;" type="button">Зарегистрироваться
+            </button>
             {% endif %}
             {% if is_anonymous == 0 %}
-                <button onclick="location.href='/user_profile/{{ user_id }}'"
-                        class="btn btn-primary link-primary text-bg-light" type="button"
-                        style="margin-top: 5px;padding-bottom: 5px;margin-bottom: 5px;">На страницу
-                </button>
+            <button onclick="location.href='/user_profile/{{ user_id }}'"
+                    class="btn btn-primary link-primary text-bg-light" type="button"
+                    style="margin-top: 5px;padding-bottom: 5px;margin-bottom: 5px;">На страницу
+            </button>
             {% endif %}
         </div>
     </div>

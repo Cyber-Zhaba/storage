@@ -1,39 +1,27 @@
+"""Flask main app"""
 import asyncio
+import datetime
 import os
 import shutil
 from math import ceil
 
-from werkzeug.exceptions import BadRequestKeyError
-from werkzeug.utils import secure_filename
-
-from data import db_session
-import configparser
-import datetime
-import logging
-from os import getcwd
-
-import matplotlib.dates as dates
-import matplotlib.pyplot as plt
-from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask, request, url_for
+from flask import Flask, request
 from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
-from gevent import monkey
-from gevent.pywsgi import WSGIServer
-from models.users import User
-from models.logs import Log
-from models.documents import Document
-from models.servers import Server
-from forms.FileForm import AddDocumentsForm
 from requests import get, post, delete, put
-from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
-from forms.ServerForm import AddServerForm
-from data.user_service import UserResource, UserListResource
-from data.logs_service import LogResource, LogsListResource
+from werkzeug.utils import secure_filename
+
+from data import db_session
 from data.document_service import DocumentResource, DocumentListResource
-from storage_communication import *
+from data.logs_service import LogsListResource
 from data.server_service import ServerResource, ServerListResource
+from data.user_service import UserResource, UserListResource
+from forms.ServerForm import AddServerForm
+from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
+from models.documents import Document
+from models.users import User
+from storage_communication import manage
 
 app = Flask(__name__)
 api = Api(app)
@@ -44,14 +32,16 @@ app.config['UPLOAD_FOLDER'] = './files'
 
 
 @app.errorhandler(404)
-def not_found(error):
+def not_found():
+    """
+    Navigates user to not found page
+    """
     if current_user.is_anonymous == 0 and current_user.admin == 1:
         return render_template(
             'admin_pages/admin_404.html',
             username=current_user.login
         )
-    else:
-        return render_template('user_pages/user_404.html')
+    return render_template('user_pages/user_404.html')
 
 
 @app.route('/logout')
@@ -76,11 +66,14 @@ def load_user(user_id):
     session = db_session.create_session()
     result = session.get(User, user_id)
     session.close()
-    return session.get(User, user_id)
+    return result
 
 
 @app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
+    """
+    Route to create and authorize new users
+    """
     message, form = '', SignUpForm()
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -115,6 +108,9 @@ def sign_up():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Authorize page for users
+    """
     message, form = '', LoginForm()
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -136,7 +132,7 @@ def login():
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': user.get_id(),
                     'owner_id': user.get_id()},
-                    timeout=(2, 20))
+                     timeout=(2, 20))
             session.close()
     return render_template(
         'login.html',
@@ -148,6 +144,9 @@ def login():
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page():
+    """
+    Rendering main page of website
+    """
     user_id = 0
     if not current_user.is_anonymous:
         user_id = current_user.id
@@ -162,10 +161,14 @@ def main_page():
 @app.route('/user_profile/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def user_profile(user_id):
+    """
+    Renders user profile page
+    :param user_id: id of user in base
+    """
     if current_user.id != user_id:
-        abort(404)
-    message, form = '', EditUserForm()
-    user = get(f'http://localhost:5000/api/users/{user_id}').json()['user']
+        return abort(404)
+    form = EditUserForm()
+    user = get(f'http://localhost:5000/api/users/{user_id}', timeout=(2, 20)).json()['user']
     form.email.data, form.login.data = user['email'], user['login']
     if request.method == 'POST':
         if form.validate_on_submit() and (form.login.data != '' or form.email.data != ''):
@@ -202,8 +205,11 @@ def user_profile(user_id):
 @app.route('/user_table_files/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def user_table_files(user_id):
+    """Render files of current user
+    :param user_id: id of user in base
+    """
     if current_user.id != user_id:
-        abort(404)
+        return abort(404)
 
     session = db_session.create_session()
 
@@ -212,7 +218,7 @@ def user_table_files(user_id):
             document = request.files['file']
             name_of_document = secure_filename(document.filename)
             document.save(f'./files/{name_of_document}')
-            with open(f'./files/{name_of_document}') as file:
+            with open(f'./files/{name_of_document}', 'r', encoding='utf-8') as file:
                 doc = post('http://localhost:5000/api/documents', json={
                     'name': name_of_document,
                     'owner_id': user_id,
@@ -229,7 +235,7 @@ def user_table_files(user_id):
                 "add",
                 doc['id'],
                 name_of_document,
-                get('http://localhost:5000/api/servers').json()['servers'],
+                get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
             os.remove(f'./files/{name_of_document}')
@@ -290,8 +296,9 @@ def user_table_files(user_id):
 @app.route('/admin_server_table')
 @login_required
 def server_table():
+    """Administrator page"""
     if current_user.admin == 1:
-        servers = get(f'http://localhost:5000/api/servers').json()['servers']
+        servers = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
 
         servers = list(servers)
         pagination = request.args.get("pag")
@@ -317,7 +324,8 @@ def server_table():
             next=next_p,
             prev=prev_p,
             total=total,
-            username=get(f'http://localhost:5000/api/users/{current_user.id}').json()["user"]["login"],
+            username=get(f'http://localhost:5000/api/users/{current_user.id}',
+                         timeout=(2, 20)).json()["user"]["login"],
         )
     return abort(404)
 
@@ -325,7 +333,11 @@ def server_table():
 @app.route('/delete_document/<int:file_id>')
 @login_required
 def delete_file(file_id):
-    document = get(f'http://localhost:5000/api/documents/{file_id}').json()
+    """
+    Api route to delete document from servers
+    :param file_id: id of file in base
+    """
+    document = get(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20)).json()
     if document['document']['owner_id'] == current_user.id or current_user.admin == 1:
         session = db_session.create_session()
         post('http://localhost:5000/api/log', json={
@@ -335,31 +347,34 @@ def delete_file(file_id):
             'owner_id': current_user.get_id()},
              timeout=(2, 20))
         session.close()
-        delete(f'http://localhost:5000/api/documents/{file_id}')
+        delete(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20))
         asyncio.run(manage(
             "delete",
             file_id,
             document['document']['name'],
-            get('http://localhost:5000/api/servers').json()['servers']
+            get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
         ))
         return redirect(f'/user_table_files/{current_user.id}', 200)
-    abort(404)
+    return abort(404)
 
 
 @app.route('/add_server', methods=['GET', 'POST'])
 @login_required
 def add_server():
+    """
+    Api route to add/edit server
+    """
     if current_user.admin == 1:
         form = AddServerForm()
         if request.method == 'POST':
             if form.validate_on_submit():
-                t, _, f = shutil.disk_usage("/")
+                total, _, free = shutil.disk_usage("/")
                 serv = post('http://localhost:5000/api/servers', json={
                     'name': form.name.data,
                     'host': form.address.data,
                     'port': form.port.data,
-                    'capacity': t // (2 ** 30),
-                    'ended_capacity': f // (2 ** 30)
+                    'capacity': total // (2 ** 30),
+                    'ended_capacity': free // (2 ** 30)
                 }, timeout=(2, 20))
                 session = db_session.create_session()
                 post('http://localhost:5000/api/log', json={
@@ -380,8 +395,13 @@ def add_server():
 @app.route('/delete_server/<int:server_id>', methods=['GET', 'POST'])
 @login_required
 def delete_server(server_id):
+    """
+    Delete server from base
+    :param server_id: id of storage in base
+    """
     if current_user.admin == 1:
-        storage = get(f'http://localhost:5000/api/servers/{server_id}').json()['server']
+        storage = get(f'http://localhost:5000/api/servers/{server_id}',
+                      timeout=(2, 20)).json()['server']
         asyncio.run(manage(
             "end", -1, "", [], storage=storage
         ))
@@ -393,9 +413,9 @@ def delete_server(server_id):
             'owner_id': current_user.get_id()},
              timeout=(2, 20))
         session.close()
-        delete(f'http://localhost:5000/api/servers/{server_id}')
-        return redirect(f'/admin_server_table', 200)
-    abort(404)
+        delete(f'http://localhost:5000/api/servers/{server_id}', timeout=(2, 20))
+        return redirect('/admin_server_table', 200)
+    return abort(404)
 
 
 if __name__ == '__main__':

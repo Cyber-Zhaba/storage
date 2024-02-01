@@ -1,5 +1,6 @@
-from flask_restful import Resource, reqparse
 from flask import jsonify
+from flask_restful import Resource, reqparse
+
 from data import db_session
 from models.servers import Server
 
@@ -41,7 +42,8 @@ class ServerListResource(Resource):
         self.parser.add_argument('capacity', required=True)
 
     def get(self):
-        return jsonify({'servers': [user.to_dict(rules=("-server", "-server")) for user in self.session.query(Server).all()]})
+        return jsonify(
+            {'servers': [user.to_dict(rules=("-server", "-server")) for user in self.session.query(Server).all()]})
 
     def post(self):
         args = self.parser.parse_args()

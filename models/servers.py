@@ -5,7 +5,6 @@ from data.db_session import SqlAlchemyBase
 
 
 class Server(SqlAlchemyBase, UserMixin, SerializerMixin):
-
     __tablename__ = 'servers'
 
     id = sqlalchemy.Column(sqlalchemy.Integer,

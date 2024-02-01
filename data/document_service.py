@@ -1,5 +1,6 @@
-from flask_restful import Resource, reqparse
 from flask import jsonify
+from flask_restful import Resource, reqparse
+
 from data import db_session
 from models.documents import Document
 
@@ -39,7 +40,8 @@ class DocumentListResource(Resource):
         self.parser.add_argument('number_of_lines', required=True)
 
     def get(self):
-        return jsonify({'documents': [user.to_dict(rules=("-document", "-document")) for user in self.session.query(Document).all()]})
+        return jsonify({'documents': [user.to_dict(rules=("-document", "-document")) for user in
+                                      self.session.query(Document).all()]})
 
     def post(self):
         args = self.parser.parse_args()

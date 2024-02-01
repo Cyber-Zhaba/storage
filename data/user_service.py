@@ -1,5 +1,6 @@
-from flask_restful import Resource, reqparse
 from flask import jsonify
+from flask_restful import Resource, reqparse
+
 from data import db_session
 from models.users import User
 

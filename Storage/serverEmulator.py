@@ -9,8 +9,8 @@ def create_connection(func):
     def wrapper(*args, **kwargs):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        client_socket.connect((host, port))
-        print(f"Connected to {host}:{port}")
+        client_socket.connect((HOST, PORT))
+        print(f"Connected to {HOST}:{PORT}")
 
         func(*args, **kwargs, client_socket=client_socket)
         client_socket.close()
@@ -28,10 +28,10 @@ def add_file(filename, *, client_socket):
     sleep(0.01)
 
     with open(filename, 'rb') as file:
-        file_data = file.read(batch_size)
+        file_data = file.read(BATCH_SIZE)
         while file_data:
             client_socket.send(file_data)
-            file_data = file.read(batch_size)
+            file_data = file.read(BATCH_SIZE)
 
     print(f"{filename} sent successfully")
 
@@ -58,10 +58,10 @@ def get_file(filename, *, client_socket):
     sleep(0.01)
 
     with open("serv_root\\" + filename, 'wb') as file:
-        file_data = client_socket.recv(batch_size)
+        file_data = client_socket.recv(BATCH_SIZE)
         while file_data:
             file.write(file_data)
-            file_data = client_socket.recv(batch_size)
+            file_data = client_socket.recv(BATCH_SIZE)
 
     print(f"{filename} received successfully")
 
@@ -112,15 +112,15 @@ def find_substring(filename, substring, start_line, end_line, *, client_socket):
     client_socket.send(str(end_line).encode())
     sleep(0.01)
 
-    result = client_socket.recv(batch_size).decode()
+    result = client_socket.recv(BATCH_SIZE).decode()
     if result == "Y":
-        line_numbers = client_socket.recv(batch_size).decode()
+        line_numbers = client_socket.recv(BATCH_SIZE).decode()
         print(f"Substring found in line {line_numbers}")
     else:
         print("Substring not found")
 
 
 # Constants
-host = '127.0.0.1'
-port = 12345
-batch_size = 1024
+HOST = '127.0.0.1'
+PORT = 12345
+BATCH_SIZE = 1024

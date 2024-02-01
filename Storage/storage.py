@@ -4,9 +4,9 @@ import os
 import socket
 import sys
 from logging import info, warning
+from shutil import rmtree
 from time import sleep
 
-from shutil import rmtree
 from yaml import safe_load
 
 
@@ -56,8 +56,8 @@ def run_server(host: str, port: int) -> None:
                         delete_all_files(client_socket)
                     case _:
                         warning("Unknown command")
-            except Exception as er:
-                warning(er)
+            except Exception as error_:
+                warning(error_)
 
             client_socket.close()
             info("Connection closed")
@@ -139,9 +139,9 @@ def edit_file(client_socket: socket.socket) -> None:
                     try:
                         client_socket.send(tmp_file_data)
                         edited = client_socket.recv(batch_size).decode() == "Y"
-                    except ConnectionAbortedError as er:
+                    except ConnectionAbortedError as error_:
                         aborted = True
-                        warning(er)
+                        warning(error_)
 
                 if not edited or aborted:
                     file.write(tmp_file_data)
@@ -168,7 +168,7 @@ def find_substring(client_socket: socket.socket) -> None:
 
     line_number = 0
     found_lines = []
-    with open("root\\" + filename, 'r') as file:
+    with open("root\\" + filename, 'r', encoding='utf-8') as file:
         while line := file.readline():
             line_number += 1
             if start_line <= line_number <= end_line:
@@ -218,11 +218,12 @@ def copy_files(client_socket: socket.socket) -> None:
 
 
 def delete_all_files(client_socket: socket.socket):
+    """Deleting all files from server"""
     info("Removing root dir...")
     rmtree("root")
-    info("root dir was successfuly removed")
+    info("root dir was successfully removed")
     info("Session is ended")
-    exit(0)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
@@ -240,7 +241,7 @@ if __name__ == "__main__":
     except FileExistsError:
         info("Root directory already exists")
 
-    with open("config.yaml", "r") as cfg_file:
+    with open("config.yaml", "r", encoding='utf-8') as cfg_file:
         cfg = safe_load(cfg_file)
 
     batch_size = cfg['batch_size']

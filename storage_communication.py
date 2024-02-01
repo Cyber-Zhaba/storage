@@ -14,7 +14,9 @@ basicConfig(
     handlers=[FileHandler("log"), StreamHandler()],
     encoding='utf-8'
 )
-batch_size = 1024
+
+BATCH_SIZE = 1024
+
 debug_storages = [
     {"host": "127.0.0.1", "port": 1111},
     {"host": "127.0.0.1", "port": 2222},
@@ -24,7 +26,6 @@ debug_storages = [
 
 
 class Storage(TypedDict):
-
     """Represents a storage entity with host and port information.
 
     It is a TypedDict which means it expects specific keys with their associated types.
@@ -61,9 +62,9 @@ def create_connection(func: Callable[..., Any]) -> Callable:
     def wrapper(*args, **kwargs):  # noqa: ANN202 ANN002 ANN003
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host, port = None, None
-        for p in args:
-            if isinstance(p, dict):
-                host, port = p["host"], p["port"]
+        for parameter in args:
+            if isinstance(parameter, dict):
+                host, port = parameter["host"], parameter["port"]
 
         if not (host and port):
             error("Couldn't find storage in args")
@@ -80,14 +81,15 @@ def create_connection(func: Callable[..., Any]) -> Callable:
 
 
 @create_connection
-def add_file(file_id: int, filename: str, file_folder: str, s: Storage,
+def add_file(file_id: int, filename: str, file_folder: str,
+             storage_: Storage,
              client_socket: socket.socket) -> None:
     """Add file to storage
 
     :param file_id: id of file in database
     :param filename: name of uploaded file
     :param file_folder: folder where file is located
-    :param s: host and port of storage
+    :param storage_: host and port of storage
     :param client_socket: client socket
     """
     client_socket.send("Add".encode())
@@ -97,23 +99,25 @@ def add_file(file_id: int, filename: str, file_folder: str, s: Storage,
     sleep(0.01)
 
     with open(os.path.join(file_folder, filename), 'rb') as file:
-        file_data = file.read(batch_size)
+        file_data = file.read(BATCH_SIZE)
         while file_data:
             client_socket.send(file_data)
-            file_data = file.read(batch_size)
+            file_data = file.read(BATCH_SIZE)
 
     info(f"{filename} sent successfully")
 
 
 @create_connection
-def delete_file(file_id: int, filename: str, file_folder: str, s: Storage,
+def delete_file(file_id: int, filename: str,
+                file_folder: str,
+                storage_: Storage,
                 client_socket: socket.socket) -> None:
     """Delete file from storage
 
     :param file_id: id of file in database
     :param filename: name of uploaded file
     :param file_folder: OPTIONAL
-    :param s: host and port of storage
+    :param storage_: host and port of storage
     :param client_socket: client socket
     """
     client_socket.send("Delete".encode())
@@ -126,14 +130,15 @@ def delete_file(file_id: int, filename: str, file_folder: str, s: Storage,
 
 
 @create_connection
-def get_file(file_id: int, filename: str, destination_folder: str, s: Storage,
+def get_file(file_id: int, filename: str, destination_folder: str,
+             storage_: Storage,
              client_socket: socket.socket) -> None:
     """Download file from storage
 
     :param file_id: id of file in database
     :param filename: name of uploaded file
     :param destination_folder: folder where file will be downloaded
-    :param s: host and port of storage
+    :param storage_: host and port of storage
     :param client_socket: client socket
     """
     client_socket.send("Get".encode())
@@ -143,22 +148,23 @@ def get_file(file_id: int, filename: str, destination_folder: str, s: Storage,
     sleep(0.01)
 
     with open(os.path.join(destination_folder, filename), 'wb') as file:
-        file_data = client_socket.recv(batch_size)
+        file_data = client_socket.recv(BATCH_SIZE)
         while file_data:
             file.write(file_data)
-            file_data = client_socket.recv(batch_size)
+            file_data = client_socket.recv(BATCH_SIZE)
 
     info(f"{filename} received successfully")
 
 
 @create_connection
-def edit_file(file_id: int, filename: str, s: Storage,
+def edit_file(file_id: int, filename: str,
+              storage_: Storage,
               client_socket: socket.socket) -> None:
     """Edit file in storage
 
     :param file_id: id of file in database
     :param filename: name of uploaded file
-    :param s: host and port of storage
+    :param storage_: host and port of storage
     :param client_socket: client socket
     """
     client_socket.send("Edit".encode())
@@ -193,7 +199,8 @@ def edit_file(file_id: int, filename: str, s: Storage,
 
 
 @create_connection
-def find_substring(file_id: int, substring: str, start: int, end: int, s: Storage,
+def find_substring(file_id: int, substring: str, start: int, end: int,
+                   storage_: Storage,
                    client_socket: socket.socket) -> str:
     """Find substring in file
 
@@ -201,7 +208,7 @@ def find_substring(file_id: int, substring: str, start: int, end: int, s: Storag
     :param substring: substring to find
     :param start: start line
     :param end: end line
-    :param s: host and port of storage
+    :param storage_: host and port of storage
     :param client_socket: client socket
     :return: result of search
     """
@@ -217,17 +224,23 @@ def find_substring(file_id: int, substring: str, start: int, end: int, s: Storag
     client_socket.send(str(end).encode())
     sleep(0.01)
 
-    result = client_socket.recv(batch_size).decode()
+    result = client_socket.recv(BATCH_SIZE).decode()
     if result == "Y":
-        line_numbers = client_socket.recv(batch_size).decode()
+        line_numbers = client_socket.recv(BATCH_SIZE).decode()
         return f"Substring found in line {line_numbers}"
-    else:
-        return "Substring not found"
+    return "Substring not found"
 
 
 @create_connection
-def add_server(new_storage: Storage, s: Storage,
+def add_server(new_storage: Storage, storage_: Storage,
                client_socket: socket.socket) -> None:
+    """Add new server
+
+        :param new_storage: new storage object
+        :param storage_: host and port of storage
+        :param client_socket: client socket
+        :return: None
+    """
     client_socket.send("Copy".encode())
     sleep(0.01)
     client_socket.send(new_storage["host"].encode())
@@ -235,8 +248,14 @@ def add_server(new_storage: Storage, s: Storage,
 
 
 @create_connection
-def end_server(s: Storage,
+def end_server(storage_: Storage,
                client_socket: socket.socket) -> None:
+    """ End connection with server
+
+        :param storage_: host and port of storage
+        :param client_socket: client socket
+        :return: None
+    """
     client_socket.send("End".encode())
 
 
@@ -288,8 +307,8 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
 
     async def create_task(args):  # noqa: ANN202 ANN001
         """Create task for asyncio loop"""
-        f, *args = args
-        resp = await loop.run_in_executor(None, f, *args)
+        func_name, *args = args
+        resp = await loop.run_in_executor(None, func_name, *args)
         responses.append(resp)
 
     match mode:
@@ -301,19 +320,18 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
 
             await asyncio.wait([loop.create_task(create_task(f)) for f in tmp_task])
         case "get":
-            get_file(file_id, filename, destination_folder, storages[0])
+            get_file(file_id, filename, destination_folder, storages[0], None)
         case "edit":
-            edit_file(file_id, filename, storages[0])
-            get_file(file_id, filename, destination_folder, storages[0])
+            edit_file(file_id, filename, storages[0], None)
+            get_file(file_id, filename, destination_folder, storages[0], None)
             await manage("add", file_id, filename, storages,
                          lines=lines, destination_folder=destination_folder)
             os.remove(os.path.join(destination_folder, filename))
         case "find":
             amount_of_lines = lines // min(lines, len(storages))
             tmp_task = []
-            f = find_substring
             line = 1
-            for i, storage in enumerate(storages):
+            for i, storage_object in enumerate(storages):
                 if line > lines:
                     break
                 if i == len(storages) - 1:
@@ -321,7 +339,8 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
 
                 info(f"{line} {line + amount_of_lines}")
                 tmp_task.append(
-                    (f, file_id, substring, line, line + amount_of_lines, storage)
+                    (find_substring, file_id, substring, line, line + amount_of_lines,
+                     storage_object)
                 )
                 line += amount_of_lines + 1
 
@@ -329,8 +348,8 @@ async def manage(mode: Mode, file_id: int, filename: str, storages: list[Storage
             await asyncio.wait([loop.create_task(create_task(f)) for f in tmp_task])
             return responses
         case "copy":
-            add_server(storage, storages[0])
+            add_server(storage, storages[0], None)
         case "end":
-            end_server(storage)
+            end_server(storage, None)
         case _:
             warning("Unknown mode")
