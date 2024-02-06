@@ -1,13 +1,10 @@
 import asyncio
 import os
-from logging import basicConfig, INFO, FileHandler, StreamHandler, DEBUG, warning
-from string import digits, ascii_lowercase
-from typing import TypedDict, TypeAlias, Literal
-from logging import info, error, debug
-
-import asyncio
-import aiohttp
 import time
+from logging import basicConfig, StreamHandler, DEBUG, warning
+from logging import info, error, debug
+from string import digits, ascii_lowercase
+from typing import TypedDict, Literal
 
 basicConfig(
     level=DEBUG,
@@ -77,6 +74,7 @@ async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: 
     writer.close()
     await writer.wait_closed()
 
+
 async def delete_file(storage: Storage, file_id: int) -> None:
     reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
     # Send command
@@ -145,7 +143,6 @@ async def get_info(storage: Storage) -> list[int]:
     data = data.decode()[:-1]
     nums = list(map(int, data.split('/')))
     return nums
-
 
 
 async def end_server(storage: Storage) -> None:
@@ -226,7 +223,7 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
 
                     info(f"Split by {line}:{line + amount_of_lines}")
                     task.append(asyncio.create_task(
-                            find_substring(storage_object, file_id, line, line + amount_of_lines, substring)
+                        find_substring(storage_object, file_id, line, line + amount_of_lines, substring)
                     ))
                     line += amount_of_lines + 1
 

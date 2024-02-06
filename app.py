@@ -3,7 +3,6 @@ import asyncio
 import datetime
 import logging
 import os
-import shutil
 from math import ceil
 
 from flask import Flask, request
@@ -11,10 +10,10 @@ from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
 from gevent import monkey
+from gevent.pywsgi import WSGIServer
 from markupsafe import Markup
 from requests import get, post, delete, put, patch
 from werkzeug.utils import secure_filename
-from gevent.pywsgi import WSGIServer
 
 from data import db_session
 from data.document_service import DocumentResource, DocumentListResource
@@ -380,7 +379,6 @@ def add_server():
         form = AddServerForm()
         if request.method == 'POST':
             if form.validate_on_submit():
-
                 free, total = asyncio.run(manage(
                     "info", 0, "", [],
                     storage={"host": form.address.data, "port": int(form.port.data)}

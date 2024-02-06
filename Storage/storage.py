@@ -1,7 +1,7 @@
 import asyncio
 import os.path
 import shutil
-from logging import basicConfig, INFO, FileHandler, StreamHandler, warning
+from logging import basicConfig, INFO, StreamHandler, warning
 from logging import info
 from shutil import rmtree
 
@@ -90,7 +90,6 @@ def end():
     info("Session is ended")
 
 
-
 async def send_file(host, port, filename):
     reader, writer = await asyncio.open_connection(host, port)
     writer.write("Add#".encode())
@@ -172,6 +171,7 @@ async def main():
 
     async with server:
         await server.serve_forever()
+
 
 if __name__ == '__main__':
     basicConfig(
