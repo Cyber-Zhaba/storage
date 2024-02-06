@@ -147,7 +147,7 @@
                                 <tr>
                                     <td>{{ server.name }}</td>
                                     <td>{{ server.host + ':' + server.port|string }}</td>
-                                    <td>OK</td>
+                                    <td>{{ server.ping }}</td>
                                     <td>{{ server.ended_capacity|string + ' гигабайт' }}
                                         <div class="progress">
                                             <div class="progress-bar" aria-valuemin="0" aria-valuenow="50"

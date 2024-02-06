@@ -1,241 +1,183 @@
-"""Storage server"""
-import logging
-import os
-import socket
-import sys
-from logging import info, warning
+import asyncio
+import os.path
+import shutil
+from logging import basicConfig, INFO, FileHandler, StreamHandler, warning
+from logging import info
 from shutil import rmtree
-from time import sleep
 
 from yaml import safe_load
 
 
-def run_server(host: str, port: int) -> None:
-    """Run the server
-
-    :param host:
-    :param port:
-    :return:
-    """
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((host, port))
-
-    server_socket.listen(1)
-    server_socket.settimeout(1)
-    info(f"Starting server on {host}:{port}")
-
-    try:
-        while True:
-            info("Waiting for new connection...")
-            while True:
-                try:
-                    client_socket, addr = server_socket.accept()
-                except socket.timeout:
-                    pass
-                else:
-                    break
-
-            info(f"Connection from {addr}")
-            command = client_socket.recv(batch_size).decode()
-            info(f"Received command: {command}")
-
-            try:
-                match command:
-                    case "Add":
-                        add_file(client_socket)
-                    case "Delete":
-                        delete_file(client_socket)
-                    case "Get":
-                        get_file(client_socket)
-                    case "Edit":
-                        edit_file(client_socket)
-                    case "Find":
-                        find_substring(client_socket)
-                    case "Copy":
-                        copy_files(client_socket)
-                    case "End":
-                        delete_all_files(client_socket)
-                    case _:
-                        warning("Unknown command")
-            except Exception as error_:
-                warning(error_)
-
-            client_socket.close()
-            info("Connection closed")
-
-    except KeyboardInterrupt:
-        server_socket.close()
-        info("Server closed")
-        sys.exit(0)
+async def read(reader, sep: str = "#"):
+    data = await reader.readuntil(sep.encode())
+    return data.decode()[:-1]
 
 
-def add_file(client_socket: socket.socket) -> None:
-    """Receive a file from the central server
+async def add_file(reader):
+    filename = await read(reader)
+    info(f"Received {filename}")
 
-    :param client_socket:
-    :return:
-    """
-    filename = client_socket.recv(batch_size).decode()
-    if not filename:
-        raise ConnectionAbortedError("Failed to receive filename")
-
-    with open("root\\" + filename, 'wb') as file:
-        file_data = client_socket.recv(batch_size)
+    with open(os.path.join("root", filename), 'wb') as file:
+        file_data = await reader.read(BATCH_SIZE)
         while file_data:
             file.write(file_data)
-            file_data = client_socket.recv(batch_size)
+            file_data = await reader.read(BATCH_SIZE)
+
     info(f"{filename} received successfully")
 
 
-def delete_file(client_socket: socket.socket) -> None:
-    """Delete a file
-
-    :param client_socket:
-    :return: None
-    """
-    filename = client_socket.recv(batch_size).decode()
-
-    os.remove("root\\" + filename)
-
+async def delete_file(reader):
+    filename = await read(reader)
+    os.remove(os.path.join("root", filename))
     info(f"{filename} deleted successfully")
 
 
-def get_file(client_socket: socket.socket) -> None:
-    """Send file to the central server
-
-    :param client_socket:
-    :return:
-    """
-    filename = client_socket.recv(batch_size).decode()
-
-    with open("root\\" + filename, 'rb') as file:
-        file_data = file.read(batch_size)
+async def get_file(reader, writer):
+    filename = await read(reader)
+    with open(os.path.join("root", filename), 'rb') as file:
+        file_data = file.read(BATCH_SIZE)
         while file_data:
-            client_socket.send(file_data)
-            file_data = file.read(batch_size)
-
+            writer.write(file_data)
+            file_data = file.read(BATCH_SIZE)
+    await writer.drain()
     info(f"{filename} sent successfully")
 
 
-def edit_file(client_socket: socket.socket) -> None:
-    """Edit a file by single batch
+async def find_substring(reader, writer):
+    filename = await read(reader)
+    start = await read(reader)
+    start = int(start)
+    stop = await read(reader)
+    stop = int(stop)
 
-    :param client_socket:
-    :return:
-    """
-    filename = client_socket.recv(batch_size).decode()
-    current_batch_size = int(client_socket.recv(batch_size).decode())
-    filename = "root\\" + filename
+    substring = ""
+    file_data = await reader.read(BATCH_SIZE)
+    while file_data:
+        substring += file_data.decode()
+        file_data = await reader.read(BATCH_SIZE)
 
-    os.rename(filename, filename + ".local")
-    aborted = False
-
-    with open(filename, 'wb') as file:
-        with open(filename + ".local", 'rb') as tmp_file:
-            tmp_file_data = tmp_file.read(current_batch_size)
-            while tmp_file_data:
-                edited = None
-
-                if not aborted:
-                    try:
-                        client_socket.send(tmp_file_data)
-                        edited = client_socket.recv(batch_size).decode() == "Y"
-                    except ConnectionAbortedError as error_:
-                        aborted = True
-                        warning(error_)
-
-                if not edited or aborted:
-                    file.write(tmp_file_data)
-                else:
-                    new_file_data = client_socket.recv(batch_size)
-                    file.write(new_file_data)
-                tmp_file_data = tmp_file.read(current_batch_size)
-
-    os.remove(filename + ".local")
-    if not aborted:
-        info(f"{filename} edited successfully")
-
-
-def find_substring(client_socket: socket.socket) -> None:
-    """Find substring in a file
-
-    :param client_socket:
-    :return:
-    """
-    filename = client_socket.recv(batch_size).decode()
-    substring = client_socket.recv(batch_size).decode()
-    start_line = int(client_socket.recv(batch_size).decode())
-    end_line = int(client_socket.recv(batch_size).decode())
-
-    info(f"Searching for {substring} in {filename} from {start_line} to {end_line}")
+    info(f"Searching for {substring.__repr__()} in {filename} from {start} to {stop}")
 
     line_number = 0
     found_lines = []
     with open("root\\" + filename, 'r', encoding='utf-8') as file:
         while line := file.readline():
             line_number += 1
-            if start_line <= line_number <= end_line + 1:
+            if start <= line_number <= stop:
                 if substring in line:
                     found_lines.append(str(line_number))
-            elif end_line + 1 < line_number:
+            elif stop < line_number:
                 break
+
     if found_lines:
-        client_socket.send("Y".encode())
-        sleep(0.05)
-        client_socket.send(';'.join(found_lines).encode())
+        writer.write("Y#".encode())
+        await writer.drain()
+        writer.write(';'.join(found_lines).encode())
         info(f"Found {len(found_lines)} lines")
     else:
-        client_socket.send("N".encode())
+        writer.write("N#".encode())
         info("Substring not found")
+    await writer.drain()
+    info(f"{filename} sent successfully")
 
 
-def copy_files(client_socket: socket.socket) -> None:
-    """Copy files from current storage to new one
-
-    :param client_socket:
-    :return:
-    """
-    host = client_socket.recv(batch_size).decode()
-    port = client_socket.recv(batch_size).decode()
-    if not port.isdigit():
-        warning("Wrong Port")
-        return
-    client_socket.close()
-
-    port = int(port)
-    all_files = [f for f in os.listdir('root') if os.path.isfile(os.path.join('root', f))]
-
-    for filename in all_files:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((host, port))
-        client_socket.send("Add".encode())
-        sleep(0.01)
-
-        client_socket.send(filename.encode())
-        sleep(0.01)
-
-        with open(os.path.join('root', filename), 'rb') as file:
-            file_data = file.read(batch_size)
-            while file_data:
-                client_socket.send(file_data)
-                file_data = file.read(batch_size)
-        client_socket.close()
-
-
-def delete_all_files(client_socket: socket.socket):
-    """Deleting all files from server"""
+def end():
     info("Removing root dir...")
     rmtree("root")
     info("root dir was successfully removed")
+    loop = asyncio.get_running_loop()
+    loop.stop()
     info("Session is ended")
-    sys.exit(0)
 
 
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
+
+async def send_file(host, port, filename):
+    reader, writer = await asyncio.open_connection(host, port)
+    writer.write("Add#".encode())
+    writer.write((filename + "#").encode())
+    await writer.drain()
+
+    with open(os.path.join("root", filename), 'rb') as file:
+        file_data = file.read(BATCH_SIZE)
+        while file_data:
+            writer.write(file_data)
+            file_data = file.read(BATCH_SIZE)
+
+    await writer.drain()
+    writer.close()
+    await writer.wait_closed()
+
+
+async def add_server(reader):
+    async def create_task(args):
+        func, *args = args
+        await func(*args)
+
+    host = await read(reader)
+    port = await read(reader)
+    port = int(port)
+
+    tasks = [asyncio.create_task(send_file(host, port, f))
+             for f in os.listdir('root') if os.path.isfile(os.path.join('root', f))]
+
+    await asyncio.wait(tasks)
+
+
+async def get_info(writer):
+    total, _, free = shutil.disk_usage("/")
+    writer.write(f"{free}/{total}#".encode())
+
+
+async def ping(writer):
+    writer.write("OK#".encode())
+
+
+async def handle_client(reader, writer):
+    addr = writer.get_extra_info('peername')
+    info(f"Connection from {addr}")
+
+    command = await read(reader)
+    info(f"Received {command} from {addr}")
+
+    match command:
+        case "Add":
+            await add_file(reader)
+        case "Delete":
+            await delete_file(reader)
+        case "Get":
+            await get_file(reader, writer)
+        case "Find":
+            await find_substring(reader, writer)
+        case "AddServer":
+            await add_server(reader)
+        case "End":
+            end()
+        case "Info":
+            await get_info(writer)
+        case "Ping":
+            await ping(writer)
+        case _:
+            warning(f"Unknown command {command} from {addr}")
+
+    writer.close()
+    await writer.wait_closed()
+    info(f"Connection closed from {addr}")
+
+
+async def main():
+    server = await asyncio.start_server(handle_client, HOST, PORT)
+
+    addr = server.sockets[0].getsockname()
+    info(f'Serving on {addr}...')
+
+    async with server:
+        await server.serve_forever()
+
+if __name__ == '__main__':
+    basicConfig(
+        level=INFO,
         format='%(asctime)s [%(levelname)s]: %(message)s',
-        handlers=[logging.FileHandler("log"), logging.StreamHandler()],
+        handlers=[StreamHandler()],
         encoding='utf-8'
     )
     info("Starting new session")
@@ -249,6 +191,11 @@ if __name__ == "__main__":
     with open("config.yaml", "r", encoding='utf-8') as cfg_file:
         cfg = safe_load(cfg_file)
 
-    batch_size = cfg['batch_size']
-
-    run_server(host=cfg["host"], port=cfg["port"])
+    BATCH_SIZE = cfg['batch_size']
+    HOST, PORT = cfg['host'], cfg['port']
+    try:
+        asyncio.run(main())
+    except RuntimeError:
+        pass
+    except Exception as er:
+        warning(er)

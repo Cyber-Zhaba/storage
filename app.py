@@ -1,6 +1,7 @@
 """Flask main app"""
 import asyncio
 import datetime
+import logging
 import os
 import shutil
 from math import ceil
@@ -9,9 +10,11 @@ from flask import Flask, request
 from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
+from gevent import monkey
+from markupsafe import Markup
 from requests import get, post, delete, put, patch
 from werkzeug.utils import secure_filename
-from markupsafe import Markup
+from gevent.pywsgi import WSGIServer
 
 from data import db_session
 from data.document_service import DocumentResource, DocumentListResource
@@ -24,6 +27,7 @@ from models.documents import Document
 from models.users import User
 from storage_communication import manage
 
+monkey.patch_all()
 app = Flask(__name__)
 api = Api(app)
 login_manager = LoginManager(app)
@@ -33,7 +37,7 @@ app.config['UPLOAD_FOLDER'] = './files'
 
 
 @app.errorhandler(404)
-def not_found():
+def not_found(error):
     """
     Navigates user to not found page
     """
@@ -98,7 +102,7 @@ def sign_up():
                     'object_id': user.get_id(),
                     'owner_id': user.get_id()},
                      timeout=(2, 20))
-                return redirect("/", 301)
+                return redirect("/")
             session.close()
     return render_template(
         'sign_up.html',
@@ -126,7 +130,7 @@ def login():
                     'object_id': user.get_id(),
                     'owner_id': user.get_id()},
                      timeout=(2, 20))
-                return redirect(f"/user_profile/{user.id}", 301)
+                return redirect(f"/user_profile/{user.id}")
             message = "Неправильный логин или пароль"
             if user:
                 post('http://localhost:5000/api/log', json={
@@ -186,7 +190,7 @@ def user_profile(user_id):
                 'owner_id': user.get_id()},
                  timeout=(2, 20))
             session.close()
-            return redirect(f"/user_profile/{user_id}", 301)
+            return redirect(f"/user_profile/{user_id}")
     if current_user.admin == 0:
         return render_template(
             '/user_pages/user_profile.html',
@@ -303,6 +307,12 @@ def server_table():
         servers = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
 
         servers = list(servers)
+        servers_ping = asyncio.run(manage(
+            "ping", storages=servers
+        ))
+        for server in servers:
+            server["ping"] = str(servers_ping[f"{server['host']}:{server['port']}"]) + " ms"
+
         pagination = request.args.get("pag")
         if pagination is None:
             pagination = 10
@@ -356,7 +366,7 @@ def delete_file(file_id):
             document['document']['name'],
             get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
         ))
-        return redirect(f'/user_table_files/{current_user.id}', 200)
+        return redirect(f'/user_table_files/{current_user.id}')
     return abort(404)
 
 
@@ -370,14 +380,19 @@ def add_server():
         form = AddServerForm()
         if request.method == 'POST':
             if form.validate_on_submit():
-                total, _, free = shutil.disk_usage("/")
+
+                free, total = asyncio.run(manage(
+                    "info", 0, "", [],
+                    storage={"host": form.address.data, "port": int(form.port.data)}
+                ))
+
                 serv = post('http://localhost:5000/api/servers', json={
                     'name': form.name.data,
                     'host': form.address.data,
                     'port': form.port.data,
                     'capacity': total // (2 ** 30),
                     'ended_capacity': free // (2 ** 30)
-                }, timeout=(2, 20))
+                }, timeout=(2, 20)).json()['server']
                 session = db_session.create_session()
                 post('http://localhost:5000/api/log', json={
                     'type': 8,
@@ -423,17 +438,16 @@ def delete_server(server_id):
              timeout=(2, 20))
         session.close()
         delete(f'http://localhost:5000/api/servers/{server_id}', timeout=(2, 20))
-        return redirect('/admin_server_table', 200)
+        return redirect('/admin_server_table')
     return abort(404)
 
 
 @app.route('/edit_document/<int:file_id>', methods=['GET', 'POST'])
 @login_required
 def edit_document(file_id):
-    doc = get(f'http://localhost:5000/api/documents/{file_id}').json()['document']
+    doc = get(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20)).json()['document']
     if doc["owner_id"] != current_user.id and current_user.admin != 1:
-        abort(404)
-        return
+        return abort(404)
     lines = [-1]
 
     if request.method == 'POST':
@@ -448,12 +462,12 @@ def edit_document(file_id):
                     'owner_id': current_user.id,
                     'size': os.path.getsize(f'./files/{name_of_document}'),
                     'number_of_lines': len(file.readlines())},
-                    timeout=(2, 20))
+                      timeout=(2, 20))
             asyncio.run(manage(
                 "add",
                 doc['id'],
                 name_of_document,
-                get('http://localhost:5000/api/servers').json()['servers'],
+                get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
             os.remove(f'./files/{name_of_document}')
@@ -479,7 +493,7 @@ def edit_document(file_id):
 
     asyncio.run(manage(
         "get", file_id, doc['name'],
-        get('http://localhost:5000/api/servers').json()['servers'],
+        get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
         destination_folder="./files/local/"
     ))
     with open(f'./files/local/{doc["name"]}') as file:
@@ -492,20 +506,17 @@ def edit_document(file_id):
                 "find",
                 file_id,
                 doc['name'],
-                get('http://localhost:5000/api/servers').json()['servers'],
+                get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
                 substring=substr,
                 lines=doc['number_of_lines'],
             ))
-            rows = [list(map(int, filter(lambda t: t.isdigit(), x.split()[-1].split(';'))))
-                    for x in find_result if x != "Substring not found"]
-            # Make from [[1, 2, 3], [4], [5, 6]] -> [1, 2, 3, 4, 5, 6]
-            rows = sorted([x for row in rows for x in row])
+            rows = sorted(find_result)
             with open(f'./files/local/{doc["name"]}') as file:
                 lines = file.readlines()
 
             # Apply row mask
             lines = [[i, substr,
-                     Markup(f'<mark>{substr}</mark>'.join(lines[i - 1].split(substr)))]
+                      Markup(f'<mark>{substr}</mark>'.join(lines[i - 1].split(substr)))]
                      for i in rows]
 
     os.remove(f'./files/local/{doc["name"]}')
@@ -530,6 +541,12 @@ def edit_document(file_id):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s]: %(message)s',
+        handlers=[logging.FileHandler("log"), logging.StreamHandler()],
+        encoding='utf-8'
+    )
     api.add_resource(UserListResource, '/api/users')
     api.add_resource(LogsListResource, '/api/log')
     api.add_resource(UserResource, '/api/users/<int:user_id>')
@@ -538,4 +555,6 @@ if __name__ == '__main__':
     api.add_resource(ServerListResource, '/api/servers')
     api.add_resource(ServerResource, '/api/servers/<int:server_id>')
     db_session.global_init("data/data.db")
-    app.run(debug=True, host='0.0.0.0')
+    # app.run(debug=True, host='0.0.0.0')
+    http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
+    http.serve_forever()

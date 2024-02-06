@@ -43,7 +43,8 @@ class ServerListResource(Resource):
 
     def get(self):
         return jsonify(
-            {'servers': [user.to_dict(rules=("-server", "-server")) for user in self.session.query(Server).all()]})
+            {'servers': [user.to_dict(rules=("-server", "-server"))
+                         for user in self.session.query(Server).all()]})
 
     def post(self):
         args = self.parser.parse_args()
