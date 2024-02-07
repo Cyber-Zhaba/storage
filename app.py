@@ -2,6 +2,7 @@
 import asyncio
 import datetime
 import logging
+import math
 import os
 from fnmatch import fnmatch
 from math import ceil
@@ -11,7 +12,6 @@ from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
 from gevent import monkey
-from gevent.pywsgi import WSGIServer
 from markupsafe import Markup
 from requests import get, post, delete, put, patch
 from werkzeug.utils import secure_filename
@@ -23,7 +23,6 @@ from data.server_service import ServerResource, ServerListResource
 from data.user_service import UserResource, UserListResource
 from forms.ServerForm import AddServerForm
 from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
-from models.documents import Document
 from models.users import User
 from storage_communication import manage
 
@@ -211,13 +210,24 @@ def user_profile(user_id):
 @app.route('/user_table_files/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def user_table_files(user_id):
+    def convert_size(size_bytes: int) -> str:
+        """
+        Convert size of file from bytes to human-readable format
+        :param size_bytes: size of file in bytes
+        """
+        if size_bytes == 0:
+            return "0B"
+        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return f"{s} {size_name[i]}"
+
     """Render files of current user
     :param user_id: id of user in base
     """
     if current_user.id != user_id:
         return abort(404)
-
-    session = db_session.create_session()
 
     if request.method == 'POST':
         try:
@@ -249,11 +259,24 @@ def user_table_files(user_id):
             pass
 
     if current_user.admin == 1:
-        documents = session.query(Document).all()
+        documents = get('http://localhost:5000/api/documents',
+                        json={
+                            "owner_id": user_id,
+                            "name": "",
+                            "size": 0,
+                            "number_of_lines": 0,
+                        },
+                        timeout=(2, 20)).json()['documents']
     else:
-        documents = session.query(Document).filter(Document.owner_id == user_id)
-    if documents is None:
-        documents = []
+        documents = get('http://localhost:5000/api/documents',
+                        json={
+                            "owner_id": user_id,
+                            "flag": "user_id",
+                            "name": "",
+                            "size": 0,
+                            "number_of_lines": 0,
+                        },
+                        timeout=(2, 20)).json()["documents"]
 
     search = request.args.get("search", "*")
     if not search:
@@ -261,7 +284,7 @@ def user_table_files(user_id):
 
     logging.debug(search)
 
-    documents = list(filter(lambda x: fnmatch(x.name, search), iter(documents)))
+    documents = list(filter(lambda x: fnmatch(x["name"], search), iter(documents)))
     pagination = request.args.get("pag")
     if pagination is None:
         pagination = 10
@@ -273,25 +296,15 @@ def user_table_files(user_id):
     next_p = min(page + 1, ceil(total / pagination))
     prev_p = max(page - 1, 1)
 
-    session.close()
+    for doc in documents:
+        doc['size'] = convert_size(int(doc['size']))
+
+    template = '/admin_pages/admin_table_files.html'
     if current_user.admin == 0:
-        return render_template(
-            '/user_pages/user_table_files.html',
-            title='Главная страница',
-            documents=documents,
-            user_id=user_id,
-            current_page=page,
-            pagination=pagination,
-            total_docs=total,
-            pages=list(range(1, ceil(total / pagination) + 1)),
-            selected=pagination,
-            next=next_p,
-            prev=prev_p,
-            username=current_user.login,
-            search=search,
-        )
+        template = '/user_pages/user_table_files.html'
+
     return render_template(
-        '/admin_pages/admin_table_files.html',
+        template,
         title='Главная страница',
         documents=documents,
         user_id=user_id,
@@ -314,7 +327,8 @@ def server_table():
     if current_user.admin == 1:
         servers = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
 
-        servers = list(servers)
+        search = request.args.get("search", "*")
+        servers = list(filter(lambda x: fnmatch(x["name"], search), iter(servers)))
         servers_ping = asyncio.run(manage(
             "ping", storages=servers
         ))
@@ -344,6 +358,7 @@ def server_table():
             next=next_p,
             prev=prev_p,
             total=total,
+            search=search,
             username=get(f'http://localhost:5000/api/users/{current_user.id}',
                          timeout=(2, 20)).json()["user"]["login"],
         )
