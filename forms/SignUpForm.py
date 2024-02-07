@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import EmailField, BooleanField, PasswordField, StringField
+from wtforms import EmailField, BooleanField, PasswordField, StringField, SelectField
 from wtforms.validators import DataRequired
 
 
@@ -19,3 +19,10 @@ class SignUpForm(FlaskForm):
 class EditUserForm(FlaskForm):
     login = StringField('Логин')
     email = EmailField('eMail')
+
+
+class AdminEditUserForm(FlaskForm):
+    login = StringField('Логин')
+    email = EmailField('eMail')
+    admin = SelectField('Статус', coerce=str, choices=[('Админ', 'Пользователь')])
+    password = PasswordField('Пароль', validators=[DataRequired()])

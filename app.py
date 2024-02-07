@@ -21,7 +21,7 @@ from data.logs_service import LogsListResource
 from data.server_service import ServerResource, ServerListResource
 from data.user_service import UserResource, UserListResource
 from forms.ServerForm import AddServerForm
-from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
+from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm, AdminEditUserForm
 from models.documents import Document
 from models.users import User
 from storage_communication import manage
@@ -341,6 +341,44 @@ def server_table():
     return abort(404)
 
 
+@app.route('/admin_user_table')
+@login_required
+def user_table():
+    """Administrator page"""
+    if current_user.admin == 1:
+        users = get('http://localhost:5000/api/users', timeout=(2, 20)).json()['users']
+
+        users = list(users)
+
+        pagination = request.args.get("pag")
+        if pagination is None:
+            pagination = 10
+        else:
+            pagination = int(pagination)
+        total = len(users)
+        page = int(request.args.get('page', 1))
+        users = users[(page - 1) * pagination: min(total, page * pagination)]
+        next_p = min(page + 1, ceil(total / pagination))
+        prev_p = max(page - 1, 1)
+
+        return render_template(
+            '/admin_pages/admin_table_users.html',
+            user_id=current_user.id,
+            users=users,
+            current_page=page,
+            pagination=pagination,
+            total_docs=total,
+            pages=list(range(1, ceil(total / pagination) + 1)),
+            selected=pagination,
+            next=next_p,
+            prev=prev_p,
+            total=total,
+            username=get(f'http://localhost:5000/api/users/{current_user.id}',
+                         timeout=(2, 20)).json()["user"]["login"],
+        )
+    return abort(404)
+
+
 @app.route('/delete_document/<int:file_id>')
 @login_required
 def delete_file(file_id):
@@ -536,6 +574,60 @@ def edit_document(file_id):
         showtable=showtable,
         text=text,
     )
+
+
+@app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    message, form = '', AdminEditUserForm
+    if current_user.admin == 1 and current_user.id != user_id:
+        documents = get('http://localhost:5000/api/documents', timeout=(2, 20)).json()['documents']
+        documents = list(documents)
+        pagination = request.args.get("pag")
+        if pagination is None:
+            pagination = 10
+        else:
+            pagination = int(pagination)
+        total = len(documents)
+        page = int(request.args.get('page', 1))
+        documents = documents[(page - 1) * pagination: min(total, page * pagination)]
+        next_p = min(page + 1, ceil(total / pagination))
+        prev_p = max(page - 1, 1)
+
+        logs = get('http://localhost:5000/api/log', timeout=(2, 20)).json()['log']
+        logs = list(logs)
+        pagination_1 = request.args.get("pag")
+        if pagination_1 is None:
+            pagination_1 = 10
+        else:
+            pagination_1 = int(pagination_1)
+        total_1 = len(logs)
+        page_1 = int(request.args.get('page', 1))
+        logs = logs[(page_1 - 1) * pagination_1: min(total_1, page_1 * pagination_1)]
+        next_p_1 = min(page_1 + 1, ceil(total_1 / pagination_1))
+        prev_p_1 = max(page_1 - 1, 1)
+
+        return render_template('/admin_pages/about_user.html',
+                               title='Страница',
+                               documents=documents,
+                               logs=logs[::-1],
+                               user_id=user_id,
+                               current_page=page,
+                               pagination=pagination,
+                               total_docs=total,
+                               pages=list(range(1, ceil(total / pagination) + 1)),
+                               selected=pagination,
+                               next=next_p,
+                               prev=prev_p,
+                               current_page_1=page_1,
+                               pagination_1=pagination_1,
+                               total_docs_1=total_1,
+                               pages_1=list(range(1, ceil(total_1 / pagination_1) + 1)),
+                               selected_1=pagination_1,
+                               next_1=next_p_1,
+                               prev_1=prev_p_1,
+                               username=current_user.login,
+                               )
 
 
 if __name__ == '__main__':

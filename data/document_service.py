@@ -46,7 +46,7 @@ class DocumentListResource(Resource):
         self.parser.add_argument('number_of_lines', required=True)
 
     def get(self):
-        return jsonify({'documents': [user.to_dict(rules=("-document", "-document")) for user in
+        return jsonify({'documents': [document.to_dict(rules=("-document", "-document")) for document in
                                       self.session.query(Document).all()]})
 
     def post(self):
