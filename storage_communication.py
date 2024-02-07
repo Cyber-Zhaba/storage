@@ -261,6 +261,10 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
                 warning("Unknown mode")
     except ConnectionRefusedError:
         warning("ConnectionRefusedError")
+    except ValueError:
+        warning("Server List is empty")
+    except IndexError:
+        warning("Server List is empty")
 
 
 if __name__ == '__main__':
