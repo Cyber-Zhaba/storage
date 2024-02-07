@@ -13,9 +13,36 @@
     <link rel="stylesheet" href="../static/css/Articles-Cards-images.css">
     <link rel="stylesheet" href="../static/css/Features-Small-Icons-Color-icons.css">
     <link rel="stylesheet" href="../static/css/untitled.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <script type="text/javascript" src="../static/js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="../static/js/script.js"></script>
 </head>
 
 <body id="page-top">
+<div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalLabel">Загрузка файла</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upload-container" method="POST" enctype="multipart/form-data">
+                    <img id="upload-image" src="../static/img/upload.svg">
+                    <div>
+                        <input id="text" type="file" name="file" accept=".txt">
+                        <label for="text">Выберите файл</label>
+                        <span>или перетащите его сюда</span>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div id="wrapper">
     <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
         <div class="container-fluid p-0"><a
@@ -60,16 +87,6 @@
                     </ul>
                 </div>
             </nav>
-            <div class="d-sm-flex justify-content-between align-items-center mb-4" style="padding-right: 32px;">
-                <h2 class="text-dark mb-0">&nbsp; &nbsp;Все файлы&nbsp;</h2>
-                <form method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <input type="file" class="form-control-file" id="text" name="file" accept=".txt">
-                    </div>
-                    <button style="margin: 4px 0px 0px 0px" type="submit" class="btn btn-primary">Загрузить файл
-                    </button>
-                </form>
-            </div>
             <div class="container-fluid">
                 <div class="card shadow">
                     <div class="card-header py-3">
@@ -162,6 +179,12 @@
                             </div>
                             <div class="col">
                                 <button class="btn btn-primary btn-sm" type="submit">Искать</button>
+                            </div>
+                             <div class="col">
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#Modal">
+                                    Загрузить
+                                </button>
                             </div>
                         </div>
                         <div class="table-responsive table mt-2" id="dataTable" role="grid"
