@@ -179,7 +179,7 @@ async def ping_server(storage: Storage) -> dict[str, int]:
     return {f"{storage['host']}:{storage['port']}": round(response_time * 1000)}
 
 
-async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "ping"],
+async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "ping", "remove"],
                  file_id: int = -1,
                  filename: str = "",
                  storages: list[Storage] = None,
@@ -188,12 +188,15 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
                  lines: int = 0,
                  file_folder: str = "",
                  destination_folder: str = "",
-                 storage: Storage = None
+                 storage: Storage = None,
+                 files: list[dict] = None,
                  ) -> list[int] | dict[str, int] | None:
     if storage is None:
         storage = {}
     if storages is None:
         storages = []
+    if files is None:
+        files = []
 
     try:
         match mode:
@@ -250,6 +253,10 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
                     for k, v in e.result().items():
                         result[k] = v
                 return result
+            case "remove":
+                tasks = [asyncio.create_task(delete_file(s, f["id"]))
+                         for s in storages for f in files]
+                await asyncio.wait(tasks)
             case _:
                 warning("Unknown mode")
     except ConnectionRefusedError:

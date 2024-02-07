@@ -350,14 +350,12 @@ def delete_file(file_id):
     """
     document = get(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20)).json()
     if document['document']['owner_id'] == current_user.id or current_user.admin == 1:
-        session = db_session.create_session()
         post('http://localhost:5000/api/log', json={
             'type': 7,
             'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
             'object_id': file_id,
             'owner_id': current_user.get_id()},
              timeout=(2, 20))
-        session.close()
         delete(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20))
         asyncio.run(manage(
             "delete",
@@ -427,16 +425,42 @@ def delete_server(server_id):
         asyncio.run(manage(
             "end", -1, "", [], storage=storage
         ))
-        session = db_session.create_session()
         post('http://localhost:5000/api/log', json={
             'type': 9,
             'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
             'object_id': server_id,
             'owner_id': current_user.get_id()},
              timeout=(2, 20))
-        session.close()
         delete(f'http://localhost:5000/api/servers/{server_id}', timeout=(2, 20))
         return redirect('/admin_server_table')
+    return abort(404)
+
+
+@app.route('/delete_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def delete_user(user_id):
+    """
+    Delete user from base
+    :param user_id: id of storage in base
+    """
+    if current_user.admin == 1:
+        storages = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
+        files = get('http://localhost:5000/api/documents',
+                    json={
+                        "owner_id": user_id,
+                        "flag": "user_id",
+                        "name": "",
+                        "size": 0,
+                        "number_of_lines": 0,
+                    },
+                    timeout=(2, 20)).json()["documents"]
+        for file in files:
+            delete(f'http://localhost:5000/api/documents/{file["id"]}', timeout=(2, 20))
+        delete(f'http://localhost:5000/api/users/{user_id}', timeout=(2, 20))
+        asyncio.run(manage(
+            "remove", storages=storages, files=files
+        ))
+        return redirect('/admin_user_table')
     return abort(404)
 
 
