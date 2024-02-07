@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import logging
 import os
+from fnmatch import fnmatch
 from math import ceil
 
 from flask import Flask, request
@@ -254,7 +255,13 @@ def user_table_files(user_id):
     if documents is None:
         documents = []
 
-    documents = list(documents)
+    search = request.args.get("search", "*")
+    if not search:
+        search = "*"
+
+    logging.debug(search)
+
+    documents = list(filter(lambda x: fnmatch(x.name, search), iter(documents)))
     pagination = request.args.get("pag")
     if pagination is None:
         pagination = 10
@@ -281,6 +288,7 @@ def user_table_files(user_id):
             next=next_p,
             prev=prev_p,
             username=current_user.login,
+            search=search,
         )
     return render_template(
         '/admin_pages/admin_table_files.html',
@@ -295,6 +303,7 @@ def user_table_files(user_id):
         next=next_p,
         prev=prev_p,
         username=current_user.login,
+        search=search,
     )
 
 
@@ -577,6 +586,6 @@ if __name__ == '__main__':
     api.add_resource(ServerListResource, '/api/servers')
     api.add_resource(ServerResource, '/api/servers/<int:server_id>')
     db_session.global_init("data/data.db")
-    # app.run(debug=True, host='0.0.0.0')
-    http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
-    http.serve_forever()
+    app.run(debug=True, host='0.0.0.0')
+    # http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
+    # http.serve_forever()
