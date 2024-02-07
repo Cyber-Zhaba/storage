@@ -44,9 +44,16 @@ class DocumentListResource(Resource):
         self.parser.add_argument('owner_id', required=True)
         self.parser.add_argument('size', required=True)
         self.parser.add_argument('number_of_lines', required=True)
+        self.parser.add_argument('flag', required=False)
 
     def get(self):
-        return jsonify({'documents': [document.to_dict(rules=("-document", "-document")) for document in
+        args = self.parser.parse_args()
+        if args.get('flag', None) == "user_id":
+            return jsonify({
+                "documents": [e.to_dict() for e in self.session.query(
+                    Document).filter(Document.owner_id == args["owner_id"])]
+            })
+        return jsonify({'documents': [user.to_dict(rules=("-document", "-document")) for user in
                                       self.session.query(Document).all()]})
 
     def post(self):

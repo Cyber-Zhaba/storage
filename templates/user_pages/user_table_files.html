@@ -13,9 +13,36 @@
     <link rel="stylesheet" href="../static/css/Articles-Cards-images.css">
     <link rel="stylesheet" href="../static/css/Features-Small-Icons-Color-icons.css">
     <link rel="stylesheet" href="../static/css/untitled.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <script type="text/javascript" src="../static/js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="../static/js/script.js"></script>
 </head>
 
 <body id="page-top">
+<div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalLabel">Загрузка файла</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="upload-container" method="POST" enctype="multipart/form-data">
+                    <img id="upload-image" src="../static/img/upload.svg">
+                    <div>
+                        <input id="text" type="file" name="file" accept=".txt">
+                        <label for="text">Выберите файл</label>
+                        <span>или перетащите его сюда</span>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div id="wrapper">
     <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
         <div class="container-fluid p-0"><a
@@ -57,16 +84,6 @@
                     </ul>
                 </div>
             </nav>
-            <div class="d-sm-flex justify-content-between align-items-center mb-4" style="padding-right: 32px;">
-                <h2 class="text-dark mb-0">&nbsp; &nbsp;Мои файлы&nbsp;</h2>
-                <form method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <input type="file" class="form-control-file" id="text" name="file" accept=".txt">
-                    </div>
-                    <button style="margin: 4px 0px 0px 0px" type="submit" class="btn btn-primary">Загрузить файл
-                    </button>
-                </form>
-            </div>
             <div class="container-fluid">
                 <div class="card shadow">
                     <div class="card-header py-3">
@@ -74,59 +91,128 @@
                     </div>
                     <div class="card-body pe-xl-5 pb-xl-5">
                         <div class="row">
-                            <div class="col-md-6 col-lg-4 col-xxl-3 text-nowrap">
-                                <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label
-                                        class="form-label form-label">Показывать по&nbsp;
-                                    <form action="" method="get">
-                                        <select name="pag"
-                                                class="form-select-sm d-inline-block form-select"
-                                                style="margin-right: -68px;">
-                                            <option value="10" {% if selected== 10 %} selected {% endif %}>10</option>
-                                            <option value="25" {% if selected== 25 %} selected {% endif %}>25</option>
-                                            <option value="50" {% if selected== 50 %} selected {% endif %}>50</option>
-                                            <option value="100" {% if selected== 100 %} selected {% endif %}>100
-                                            </option>
-                                        </select>
-                                        <button type="submit" class="btn btn-primary btn-sm" ё>Выбрать</button>
-                                    </form>
-                                    <script>
-                                        // Функция для получения значения GET-параметра из URL
-                                        function getQueryParam(name) {
-                                            const urlParams = new URLSearchParams(window.location.search);
-                                            return urlParams.get(name);
-                                        }
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col">
+                                        <form action="" method="get" class="form-inline">
+                                            <label class="form-label form-label">Показывать по&nbsp;</label>
+                                            <div class="row">
+                                                <div class="col">
 
-                                        // Функция для добавления GET-параметра к текущему URL
-                                        function addQueryParam(name, value) {
-                                            const urlParams = new URLSearchParams(window.location.search);
-                                            urlParams.set(name, value);
-                                            const newUrl = window.location.pathname + '?' + urlParams.toString();
-                                            window.history.replaceState({}, '', newUrl);
-                                        }
+                                                    <select name="pag"
+                                                            class="form-select-sm d-inline-block form-select"
+                                                            style="margin-right: -68px;">
+                                                        <option value="10" {% if selected== 10 %}
+                                                                selected {% endif %}>
+                                                            10
+                                                        </option>
+                                                        <option value="25" {% if selected== 25 %}
+                                                                selected {% endif %}>
+                                                            25
+                                                        </option>
+                                                        <option value="50" {% if selected== 50 %}
+                                                                selected {% endif %}>
+                                                            50
+                                                        </option>
+                                                        <option value="100"
+                                                                {% if selected== 100 %}selected {% endif %}>
+                                                            100
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col">
+                                                    <button type="submit" class="btn btn-primary btn-sm">Выбрать
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
 
-                                        // Проверяем, есть ли нужный GET-параметр
-                                        document.addEventListener('DOMContentLoaded', function () {
-                                            const paramName = 'pag';
-                                            const paramValue = '10';
-
-                                            if (!getQueryParam(paramName)) {
-                                                // Если параметра нет, добавляем его
-                                                addQueryParam(paramName, paramValue);
+                                        <script>
+                                            // Функция для получения значения GET-параметра из URL
+                                            function getQueryParam(name) {
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                return urlParams.get(name);
                                             }
-                                        });
 
-                                    </script>
-                                </label></div>
+                                            // Функция для добавления GET-параметра к текущему URL
+                                            function addQueryParam(name, value) {
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                urlParams.set(name, value);
+                                                const newUrl = window.location.pathname + '?' + urlParams.toString();
+                                                window.history.replaceState({}, '', newUrl);
+                                            }
+
+                                            // Проверяем, есть ли нужный GET-параметр
+                                            document.addEventListener('DOMContentLoaded', function () {
+                                                const paramName = 'pag';
+                                                const paramValue = '10';
+
+                                                if (!getQueryParam(paramName)) {
+                                                    // Если параметра нет, добавляем его
+                                                    addQueryParam(paramName, paramValue);
+                                                }
+                                            });
+
+                                        </script>
+                                        <!--                                    <select-->
+                                        <!--                                        name="paginate"-->
+                                        <!--                                        class="form-select-sm d-inline-block form-select" style="margin-right: -68px;">-->
+                                        <!--                                    <option value="10"></option>-->
+                                        <!--                                    <option value="25">25</option>-->
+                                        <!--                                    <option value="50">50</option>-->
+                                        <!--                                    <option value="100">100</option>-->
+                                        <!--                                </select>-->
+                                        <!--                                            <form method="post">-->
+                                        <!--                                            <select id="items" name="selected_item">-->
+                                        <!--                                                <option value="10">10</option>-->
+                                        <!--                                                <option value="25">25</option>-->
+                                        <!--                                                <option value="50">50</option>-->
+                                        <!--                                                <option value="100">100</option>-->
+                                        <!--                                            </select>-->
+                                        <!--                                                <button type="submit" onclick="saveSelectedValue()">Обновить</button>-->
+                                        <!--                                        </form>-->
+                                        <!--                                    <script>-->
+                                        <!--                                    function saveSelectedValue() {-->
+                                        <!--                                        var selectElement = document.getElementById("items");-->
+                                        <!--                                        var selectedValue = selectElement.value;-->
+                                        <!--                                        localStorage.setItem("selectedValue", selectedValue);-->
+                                        <!--                                    }-->
+
+                                        <!--                                    // Проверяем, сохранено ли значение в localStorage-->
+                                        <!--                                    document.addEventListener("DOMContentLoaded", function() {-->
+                                        <!--                                        var savedValue = localStorage.getItem("selectedValue");-->
+                                        <!--                                        if (savedValue !== null) {-->
+                                        <!--                                            var selectElement = document.getElementById("items");-->
+                                        <!--                                            selectElement.value = savedValue;-->
+                                        <!--                                        }-->
+                                        <!--                                    });-->
+                                        <!--                                </script>-->
+
+                                    </div>
+                                    <div class="col">
+                                        <form action="" method="get" class="form-inline">
+                                            <div class="form-group">
+                                                <label class="form-label form-label">Поиск&nbsp;</label>
+                                                <div class="input-group">
+                                                    <input class="form-control" name="search"
+                                                           placeholder="Поиск файлов.." style="margin-right: 10px;">
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-primary btn-sm">Искать
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6 col-lg-3 col-xxl-4">
-                                <div class="text-md-end dataTables_filter" id="dataTable_filter"><label
-                                        class="form-label form-label"><input class="form-control-sm form-control"
-                                                                             type="search" aria-controls="dataTable"
-                                                                             placeholder="Поиск файлов.."></label></div>
-                            </div>
-                            <div class="col">
-                                <button class="btn btn-primary btn-sm" type="submit">Искать</button>
-                            </div>
+                        </div>
+
+                        <div class="col">
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#Modal">
+                                Загрузить
+                            </button>
                         </div>
                         <div class="table-responsive table mt-2" id="dataTable" role="grid"
                              aria-describedby="dataTable_info"
@@ -134,58 +220,59 @@
                             <table class="table my-0" id="dataTable">
                                 <thead>
                                 <tr>
-                                    <td><strong>Имя файла</strong></td>
-                                    <td><strong>Дата изменения</strong></td>
-                                    <td><strong>Размер</strong></td>
-                                    <td><strong>Изменить</strong></td>
-                                    <td><strong>Удалить</strong></td>
+                                    <th>Имя файла</th>
+                                    <th>Владелец</th>
+                                    <th>Дата изменения</th>
+                                    <th>Размер</th>
+                                    <th>Изменить</th>
+                                    <th>Удалить</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {% for document in documents %}
-                                <tr>
-                                    <td>{{ document.name }}</td>
-                                    <td>{{ document.last_modified }}</td>
-                                    <td>{{ document.size }}</td>
-                                    <td><a class="btn btn-info btn-icon-split" role="button"
-                                           href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
-                                            class="fas fa-info-circle"></i></span><span
-                                            class="text-white text">Изменить</span></a>
-                                    </td>
-                                    <td><a class="btn btn-danger btn-circle ms-1" role="button"
-                                           href="/delete_document/{{ document.id }}"><i
-                                            class="fas fa-trash text-white"></i></a></td>
-                                </tr>
+                                    <tr>
+                                        <td>{{ document.name }}</td>
+                                        <td>{{ document.owner_id }}</td>
+                                        <td>{{ document.last_modified }}</td>
+                                        <td>{{ document.size }}</td>
+                                        <td><a class="btn btn-info btn-icon-split" role="button"
+                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                                class="fas fa-info-circle"></i></span><span
+                                                class="text-white text">Изменить</span></a>
+                                        </td>
+                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                               href="/delete_document/{{ document.id }}"><i
+                                                class="fas fa-trash text-white"></i></a></td>
+                                    </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                         <div class="row">
                             <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">
+                                    Показано по
                                     {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">
                                 <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
                                     <ul class="pagination">
                                         <li class="page-item"><a class="page-link"
-                                                                 href="?pag={{ selected }}&page={{ prev }}"
+                                                                 href="?pag={{ selected }}&page={{ prev }}&search={{ search }}"
                                                                  aria-label="Previous">Предыдущая страница</a></li>
                                         {% for page in pages %}
-                                        {% if page == current_page %}
-                                        <li class="page-item active"><a class="page-link"
-                                                                        href="?pag={{ selected }}&page={{ page }}">{{
-                                            page }}</a>
-                                        </li>
-                                        {% else %}
-                                        <li class="page-item"><a class="page-link"
-                                                                 href="?pag={{ selected }}&page={{ page }}">{{ page
-                                            }}</a>
-                                        </li>
-                                        {% endif %}
+                                            {% if page == current_page %}
+                                                <li class="page-item active"><a class="page-link"
+                                                                                href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link"
+                                                                         href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
+                                                </li>
+                                            {% endif %}
                                         {% endfor %}
                                         <li class="page-item"><a class="page-link"
-                                                                 href="?pag={{ selected }}&page={{ next }}"
+                                                                 href="?pag={{ selected }}&page={{ next }}&search={{ search }}"
                                                                  aria-label="Next">Следующая страница</a></li>
                                     </ul>
                                 </nav>
@@ -195,16 +282,18 @@
                 </div>
             </div>
         </div>
-        <footer class="bg-white sticky-footer">
-            <div class="container my-auto">
-                <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
-            </div>
-        </footer>
     </div>
-    <a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
 </div>
+<footer class="bg-white sticky-footer">
+    <div class="container my-auto">
+        <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
+    </div>
+</footer>
+<a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
+
 <script src="../static/bootstrap/js/bootstrap.min.js"></script>
 <script src="../static/js/theme.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 </body>
 
 </html>
