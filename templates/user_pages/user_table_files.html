@@ -207,75 +207,76 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#Modal">
-                            Загрузить
-                        </button>
-                    </div>
-                    <div class="table-responsive table mt-2" id="dataTable" role="grid"
-                         aria-describedby="dataTable_info"
-                         style="padding-bottom: 0px;margin-bottom: 5px;padding-right: 0px;margin-right: 5px;">
-                        <table class="table my-0" id="dataTable">
-                            <thead>
-                            <tr>
-                                <th>Имя файла</th>
-                                <th>Владелец</th>
-                                <th>Дата изменения</th>
-                                <th>Размер</th>
-                                <th>Изменить</th>
-                                <th>Удалить</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for document in documents %}
-                                <tr>
-                                    <td>{{ document.name }}</td>
-                                    <td>{{ document.owner_id }}</td>
-                                    <td>{{ document.last_modified }}</td>
-                                    <td>{{ document.size }}</td>
-                                    <td><a class="btn btn-info btn-icon-split" role="button"
-                                           href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
-                                            class="fas fa-info-circle"></i></span><span
-                                            class="text-white text">Изменить</span></a>
-                                    </td>
-                                    <td><a class="btn btn-danger btn-circle ms-1" role="button"
-                                           href="/delete_document/{{ document.id }}"><i
-                                            class="fas fa-trash text-white"></i></a></td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 align-self-center">
-                            <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">
-                                Показано по
-                                {{ pagination }}, всего {{ total_docs }}</p>
+
+                        <div class="col">
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#Modal">
+                                Загрузить
+                            </button>
                         </div>
-                        <div class="col-md-6">
-                            <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
-                                <ul class="pagination">
-                                    <li class="page-item"><a class="page-link"
-                                                             href="?pag={{ selected }}&page={{ prev }}&search={{ search }}"
-                                                             aria-label="Previous">Предыдущая страница</a></li>
-                                    {% for page in pages %}
-                                        {% if page == current_page %}
-                                            <li class="page-item active"><a class="page-link"
-                                                                            href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
-                                            </li>
-                                        {% else %}
-                                            <li class="page-item"><a class="page-link"
-                                                                     href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
-                                            </li>
-                                        {% endif %}
-                                    {% endfor %}
-                                    <li class="page-item"><a class="page-link"
-                                                             href="?pag={{ selected }}&page={{ next }}&search={{ search }}"
-                                                             aria-label="Next">Следующая страница</a></li>
-                                </ul>
-                            </nav>
+                        <div class="table-responsive table mt-2" id="dataTable" role="grid"
+                             aria-describedby="dataTable_info"
+                             style="padding-bottom: 0px;margin-bottom: 5px;padding-right: 0px;margin-right: 5px;">
+                            <table class="table my-0" id="dataTable">
+                                <thead>
+                                <tr>
+                                    <th>Имя файла</th>
+                                    <th>Владелец</th>
+                                    <th>Дата изменения</th>
+                                    <th>Размер</th>
+                                    <th>Изменить</th>
+                                    <th>Удалить</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for document in documents %}
+                                    <tr>
+                                        <td>{{ document.name }}</td>
+                                        <td>{{ document.owner_id }}</td>
+                                        <td>{{ document.last_modified }}</td>
+                                        <td>{{ document.size }}</td>
+                                        <td><a class="btn btn-info btn-icon-split" role="button"
+                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                                class="fas fa-info-circle"></i></span><span
+                                                class="text-white text">Изменить</span></a>
+                                        </td>
+                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                               href="/delete_document/{{ document.id }}"><i
+                                                class="fas fa-trash text-white"></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 align-self-center">
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">
+                                    Показано по
+                                    {{ pagination }}, всего {{ total_docs }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                                    <ul class="pagination">
+                                        <li class="page-item"><a class="page-link"
+                                                                 href="?pag={{ selected }}&page={{ prev }}&search={{ search }}"
+                                                                 aria-label="Previous">Предыдущая страница</a></li>
+                                        {% for page in pages %}
+                                            {% if page == current_page %}
+                                                <li class="page-item active"><a class="page-link"
+                                                                                href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link"
+                                                                         href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <li class="page-item"><a class="page-link"
+                                                                 href="?pag={{ selected }}&page={{ next }}&search={{ search }}"
+                                                                 aria-label="Next">Следующая страница</a></li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
