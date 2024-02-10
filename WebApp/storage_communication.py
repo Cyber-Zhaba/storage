@@ -51,7 +51,7 @@ def id2scrap(file_id: int) -> str:
 
 async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> dict[str, str]:
     try:
-        reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
+        reader, writer = await asyncio.open_connection(host=storage["host"], port=storage["port"])
     except ConnectionRefusedError:
         return {f"{storage['host']}:{storage['port']}": "Fail"}
     # Send command
@@ -71,10 +71,15 @@ async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: 
             debug(f"Progress: {counter / total * 100:.2f}%")
 
     writer.write_eof()
+
+    info(f"{dir(reader)}")
+    info(f"{await reader.read(-1)}")
+
     try:
         _ = await reader.readuntil("#".encode())
     except IncompleteReadError:
         return {f"{storage['host']}:{storage['port']}": "Fail"}
+
     return {f"{storage['host']}:{storage['port']}": "OK"}
 
 
@@ -90,6 +95,7 @@ async def delete_file(storage: Storage, file_id: int) -> None:
 
 async def download_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> bool:
     try:
+        print(storage["host"], storage["port"])
         reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
     except ConnectionRefusedError:
         return False
@@ -99,8 +105,10 @@ async def download_file(storage: Storage, file_id: int, file_name: str, file_fol
     writer.write(id2scrap(file_id).encode())
     await writer.drain()
     # Receive file data
+    print("opened file")
     with open(os.path.join(file_folder, file_name), 'wb') as file:
         file_data = await reader.read(BATCH_SIZE)
+        print(file_data)
         while file_data:
             file.write(file_data)
             file_data = await reader.read(BATCH_SIZE)
@@ -208,13 +216,18 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
     try:
         match mode:
             case "add":
+                info(f"{storages, file_id, filename, file_folder}")
                 tasks = [asyncio.create_task(add_file(s, file_id, filename, file_folder))
                          for s in storages]
-
                 response, _ = await asyncio.wait(tasks)
                 result = {}
+
                 for e in response:
+                    info(f"{e}")
                     result.update(e.result())
+
+                info(f"{result}")
+
                 return result
             case "delete":
                 tasks = [asyncio.create_task(delete_file(s, file_id))
@@ -222,6 +235,7 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
 
                 await asyncio.wait(tasks)
             case "get":
+                print("get start")
                 for storage in storages:
                     if await download_file(storage, file_id, filename, destination_folder):
                         break

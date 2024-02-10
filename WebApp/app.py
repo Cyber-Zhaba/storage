@@ -258,6 +258,7 @@ def user_table_files(user_id):
                     'owner_id': user_id,
                     'description': f'Добавление файла: {name_of_document}'},
                      timeout=(2, 20))
+
             result = asyncio.run(manage(
                 "add",
                 doc['id'],
@@ -265,6 +266,9 @@ def user_table_files(user_id):
                 get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
+
+            logging.info(f"{result}")
+
             for v, k in result.items():
                 if k == "OK":
                     post('http://localhost:5000/api/servers', json={
@@ -660,9 +664,10 @@ def edit_document(file_id):
     if doc["owner_id"] != current_user.id and current_user.admin != 1:
         return abort(404)
     lines = [-1]
-
+    logging.info(f"{doc}, {lines}, {request.method}")
     if request.method == 'POST':
         try:
+            logging.info("IN TRY")
             document = request.files['file']
             name_of_document = doc['name']
             document.save(f'./files/{name_of_document}')
@@ -674,6 +679,9 @@ def edit_document(file_id):
                     'size': os.path.getsize(f'./files/{name_of_document}'),
                     'number_of_lines': len(file.readlines())},
                       timeout=(2, 20))
+
+            logging.info(f"{doc['id'], name_of_document}")
+
             result = asyncio.run(manage(
                 "add",
                 doc['id'],
@@ -681,6 +689,9 @@ def edit_document(file_id):
                 get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
+
+            logging.info(f"{result}")
+
             for v, k in result.items():
                 if k == "OK":
                     post('http://localhost:5000/api/servers', json={
@@ -689,9 +700,11 @@ def edit_document(file_id):
                         "port": int(v.split(":")[1])
                     }, timeout=(2, 20))
             os.remove(f'./files/{name_of_document}')
+
         except PermissionError:
-            pass
+            logging.info(f"PERMISSION ERROR")
         except KeyError:
+            print("KEY ERROR")
             text = request.form['text'].replace('\r', '')
             with open("./files/local/" + doc['name'], 'w') as file:
                 file.write(text)

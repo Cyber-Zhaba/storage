@@ -8,11 +8,25 @@ git clone https://github.com/Cyber-Zhaba/storage
 cd storage/Storage
 docker compose up -d
  ````
-### Сборка сайта
+### Сборка сайта(win)
+Use in cmd (not powershell)
 ````shell 
 git clone https://github.com/Cyber-Zhaba/storage
 cd storage/WebApp
-docker compose up -d
+python -m venv venv
+call venv/Scripts/activate
+pip install -r requirements.txt
+python app.py
+ ````
+
+### Сборка сайта(unix)
+````shell 
+git clone https://github.com/Cyber-Zhaba/storage
+cd storage/WebApp
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python app.py
  ````
 
 ## Оглавление
