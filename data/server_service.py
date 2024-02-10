@@ -32,6 +32,12 @@ class ServerResource(Resource):
     def put(self, server_id: int):
         args = self.parser.parse_args()
         server = self.session.query(Server).get(server_id)
+        if args['name'] != '':
+            setattr(server, 'name', args['name'])
+        if args['host'] != '':
+            setattr(server, 'host', args['host'])
+        if args['port'] != '':
+            setattr(server, 'port', args['port'])
         self.session.commit()
         return jsonify({'status': 'OK'})
 

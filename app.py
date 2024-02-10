@@ -25,6 +25,7 @@ from data.user_service import UserResource, UserListResource
 from forms.ServerForm import AddServerForm
 from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm, AdminEditUserForm
 from models.users import User
+from models.versions import Versions
 from storage_communication import manage
 
 monkey.patch_all()
@@ -399,6 +400,7 @@ def user_table():
         p = math.pow(1024, i)
         s = round(size_bytes / p, 2)
         return f"{s} {size_name[i]}"
+
     """Administrator page"""
     if current_user.admin == 1:
         users = get('http://localhost:5000/api/users', timeout=(2, 20)).json()['users']
@@ -549,6 +551,80 @@ def delete_server(server_id):
     return abort(404)
 
 
+@app.route('/edit_server/<int:server_id>', methods=['GET', 'POST'])
+@login_required
+def edit_server(server_id):
+    """
+    Edit server
+    :param server_id: id of storage in base
+    """
+    message, form = '', AddServerForm()
+    if current_user.admin == 1:
+        server = get(f'http://localhost:5000/api/servers/{server_id}',
+                     timeout=(2, 20)).json()['server']
+        if request.method == 'POST':
+            put(f'http://localhost:5000/api/servers/{server_id}',
+                json={'name': form.name.data,
+                      'host': form.address.data,
+                      'port': form.port.data,
+                      'ended_capacity': '',
+                      'capacity': ''},
+                timeout=(2, 20))
+            server = get(f'http://localhost:5000/api/servers/{server_id}',
+                         timeout=(2, 20)).json()['server']
+            post('http://localhost:5000/api/log', json={
+                'type': 11,
+                'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                'object_id': server['id'],
+                'owner_id': current_user.id,
+                'description': f'Изменение сервера: {server['name']}'},
+                 timeout=(2, 20))
+        session = db_session.create_session()
+        documents = list(get(f'http://localhost:5000/api/documents', json={
+                            "owner_id": "",
+                            "flag": "",
+                            "name": "",
+                            "size": 0,
+                            "number_of_lines": 0,
+                        }, timeout=(2, 20)).json()['documents'])
+        for document in documents:
+            document['version'] = session.query(Versions).filter(Versions.server_id == server['id']).filter(Versions.file_id == document['id']).first().to_dict()['current_version']
+        session.close()
+        form.name.data = server['name']
+        form.address.data = server['host']
+        form.port.data = server['port']
+        search = '*' + request.args.get("search", "*") + '*'
+        if not search:
+            search = "*"
+
+        logging.debug(search)
+
+        documents = list(filter(lambda x: fnmatch(x["name"], search), iter(documents)))
+        pagination = request.args.get("pag")
+        if pagination is None:
+            pagination = 10
+        else:
+            pagination = int(pagination)
+        total = len(documents)
+        page = int(request.args.get('page', 1))
+        documents = documents[(page - 1) * pagination: min(total, page * pagination)]
+        next_p = min(page + 1, ceil(total / pagination))
+        prev_p = max(page - 1, 1)
+        return render_template('/admin_pages/about_server.html',
+                               form_1=form,
+                               message=message,
+                               documents=documents,
+                               current_page=page,
+                               pagination=pagination,
+                               total_docs=total,
+                               pages=list(range(1, ceil(total / pagination) + 1)),
+                               selected=pagination,
+                               next=next_p,
+                               prev=prev_p,
+                               )
+    return abort(404)
+
+
 @app.route('/delete_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def delete_user(user_id):
@@ -655,7 +731,8 @@ def edit_document(file_id):
                 "find",
                 file_id,
                 doc['name'],
-                get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()['servers'],
+                get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()[
+                    'servers'],
                 substring=substr,
                 lines=doc['number_of_lines'],
             ))
@@ -698,9 +775,11 @@ def edit_user(user_id):
         if request.method == 'POST':
             if current_user.check_password(form.password.data):
                 session = db_session.create_session()
-                if session.query(User).filter(User.login == f'{form.login.data}').first() and form.login.data != user['login']:
+                if session.query(User).filter(User.login == f'{form.login.data}').first() and form.login.data != user[
+                    'login']:
                     message = "Этот логин уже существует"
-                elif session.query(User).filter(User.email == f'{form.email.data}').first() and form.email.data != user['email']:
+                elif session.query(User).filter(User.email == f'{form.email.data}').first() and form.email.data != user[
+                    'email']:
                     message = "Этот email уже привязан к аккаунту"
                 else:
                     put(f'http://localhost:5000/api/users/{user_id}', json={
@@ -715,6 +794,7 @@ def edit_user(user_id):
                         'owner_id': current_user.id,
                         'description': f'Изменение данных пользователя: {user["login"]}'},
                          timeout=(2, 20))
+                    user = get(f'http://localhost:5000/api/users/{user_id}', timeout=(2, 20)).json()['user']
                 session.close()
             else:
                 message = 'Неверный пароль'
@@ -786,7 +866,6 @@ def edit_user(user_id):
                                form_1=form,
                                message=message
                                )
-
 
 
 if __name__ == '__main__':
