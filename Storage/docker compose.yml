@@ -6,4 +6,3 @@ services:
     image: server-image-py
     ports:
       - "12345:12345/tcp"
-      - protocol: tcp

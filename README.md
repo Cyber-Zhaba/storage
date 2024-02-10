@@ -1,5 +1,20 @@
 # Командный кейс No 5 «Разработка распределенного хранилища данных»
 > Московская предпрофессиональная олимпиада Профиль «Информационные технологии»
+
+## Cборка проекта
+### Сборка сервера
+````shell 
+git clone https://github.com/Cyber-Zhaba/storage
+cd storage/Storage
+docker compose up -d
+ ````
+### Сборка сайта
+````shell 
+git clone https://github.com/Cyber-Zhaba/storage
+cd storage/WebApp
+docker compose up -d
+ ````
+
 ## Оглавление
 1. [Цель](#Цель)
 2. [Задачи](#Задачи)

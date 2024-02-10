@@ -721,6 +721,7 @@ def edit_document(file_id):
         get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()['servers'],
         destination_folder="./files/local/"
     ))
+
     with open(f'./files/local/{doc["name"]}') as file:
         text = file.read()
 
