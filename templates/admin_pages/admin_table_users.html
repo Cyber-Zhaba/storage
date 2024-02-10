@@ -62,9 +62,7 @@
                 </div>
             </nav>
             <div class="d-sm-flex justify-content-between align-items-center mb-4" style="padding-right: 32px;">
-                <h2 class="text-dark mb-0">Пользователи</h2><a
-                    class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="/add_user"><i
-                    class="fas fa-download fa-sm text-white-50"></i>&nbsp;Добавить пользователя</a>
+                <h2 class="text-dark mb-0">Пользователи</h2>
             </div>
             <div class="container-fluid">
                 <div class="card shadow">
@@ -74,12 +72,11 @@
                     <div class="card-body pe-xl-5 pb-xl-5">
                         <div class="row">
                             <div class="col-md-6 col-lg-4 col-xl-3 col-xxl-3 text-nowrap">
-                                <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label
-                                        class="form-label form-label">Показывать по&nbsp;
+                                <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label>
                                     <form action="" method="get">
                                         <select name="pag"
                                                 class="form-select-sm d-inline-block form-select"
-                                                style="margin-right: -68px;">
+                                                style="margin-right: 6px;">
                                             <option value="10" {% if selected== 10 %} selected {% endif %}>10</option>
                                             <option value="25" {% if selected== 25 %} selected {% endif %}>25</option>
                                             <option value="50" {% if selected== 50 %} selected {% endif %}>50</option>
@@ -117,16 +114,20 @@
                                     </script>
                                 </label></div>
                             </div>
-                            <div class="col-md-6 col-xl-3 col-xxl-2">
-                                <div class="text-md-end dataTables_filter" id="dataTable_filter"><label
-                                        class="form-label form-label"><input class="form-control-sm form-control"
-                                                                             type="search" aria-controls="dataTable"
-                                                                             placeholder="Поиск серверов.."></label>
-                                </div>
-                            </div>
                             <div class="col">
-                                <button class="btn btn-primary btn-sm" type="submit">Искать</button>
-                            </div>
+                                        <form action="" method="get" class="form-inline">
+                                            <div class="form-group">
+                                                <div class="input-group">
+                                                    <input class="form-control" name="search"
+                                                           placeholder="Поиск по ID.." style="margin-right: 10px;">
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-primary btn-sm">Искать
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
                         </div>
                         <div class="table-responsive table mt-2" id="dataTable" role="grid"
                              aria-describedby="dataTable_info"
@@ -135,7 +136,7 @@
                                 <thead>
                                 <tr>
                                     <th>Логин</th>
-                                    <th>eMail</th>
+                                    <th>ID</th>
                                     <th>Права</th>
                                     <th>Последняя активность</th>
                                     <th>Размер всех файлов</th>
@@ -148,14 +149,14 @@
                                     {% if current_user.id != user.id %}
                                         <tr>
                                             <th>{{ user.login }}</th>
-                                            <td>{{ user.email }}</td>
+                                            <td>{{ user.id }}</td>
                                             {%  if user.admin == 1 %}
-                                                <td>Админ</td>
+                                                <td>Администратора</td>
                                             {% else %}
-                                                <td>Пользователь</td>
+                                                <td>Пользователя</td>
                                             {% endif %}
-                                            <td>11:29 12.01.2024</td>
-                                            <td>150.8 МБ</td>
+                                            <td>{{ user.activity }}</td>
+                                            <td>{{ user.size }}</td>
                                             <td><a class="btn btn-info btn-icon-split" role="button"
                                                     href="/edit_user/{{ user.id }}"><span
                                                     class="text-white-50 icon"><i
@@ -172,7 +173,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано по
                                     {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">

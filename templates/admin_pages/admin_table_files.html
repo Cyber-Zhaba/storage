@@ -99,7 +99,6 @@
                                 <div class="row">
                                     <div class="col">
                                         <form action="" method="get" class="form-inline">
-                                            <label class="form-label form-label">Показывать по&nbsp;</label>
                                             <div class="row">
                                                 <div class="col">
 
@@ -125,7 +124,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col">
-                                                    <button type="submit" class="btn btn-primary btn-sm" ё>Выбрать
+                                                    <button type="submit" class="btn btn-primary btn-sm">Выбрать
                                                     </button>
                                                 </div>
                                             </div>
@@ -196,7 +195,6 @@
                                     <div class="col">
                                         <form action="" method="get" class="form-inline">
                                             <div class="form-group">
-                                                <label class="form-label form-label">Поиск&nbsp;</label>
                                                 <div class="input-group">
                                                     <input class="form-control" name="search"
                                                            placeholder="Поиск файлов.." style="margin-right: 10px;">
@@ -234,27 +232,27 @@
                                 </thead>
                                 <tbody>
                                 {% for document in documents %}
-                                    <tr>
-                                        <td>{{ document.name }}</td>
-                                        <td>{{ document.owner_id }}</td>
-                                        <td>{{ document.last_modified }}</td>
-                                        <td>{{ document.size }}</td>
-                                        <td><a class="btn btn-info btn-icon-split" role="button"
-                                               href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
-                                                class="fas fa-info-circle"></i></span><span
-                                                class="text-white text">Изменить</span></a>
-                                        </td>
-                                        <td><a class="btn btn-danger btn-circle ms-1" role="button"
-                                               href="/delete_document/{{ document.id }}"><i
-                                                class="fas fa-trash text-white"></i></a></td>
-                                    </tr>
+                                <tr>
+                                    <td>{{ document.name }}</td>
+                                    <td>{{ document.owner_id }}</td>
+                                    <td>{{ document.last_modified }}</td>
+                                    <td>{{ document.size }}</td>
+                                    <td><a class="btn btn-info btn-icon-split" role="button"
+                                           href="/edit_document/{{ document.id }}"><span class="text-white-50 icon"><i
+                                            class="fas fa-info-circle"></i></span><span
+                                            class="text-white text">Изменить</span></a>
+                                    </td>
+                                    <td><a class="btn btn-danger btn-circle ms-1" role="button"
+                                           href="/delete_document/{{ document.id }}"><i
+                                            class="fas fa-trash text-white"></i></a></td>
+                                </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                         <div class="row">
                             <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано по
                                     {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">
@@ -264,15 +262,17 @@
                                                                  href="?pag={{ selected }}&page={{ prev }}&search={{ search }}"
                                                                  aria-label="Previous">Предыдущая страница</a></li>
                                         {% for page in pages %}
-                                            {% if page == current_page %}
-                                                <li class="page-item active"><a class="page-link"
-                                                                                href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
-                                                </li>
-                                            {% else %}
-                                                <li class="page-item"><a class="page-link"
-                                                                         href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{ page }}</a>
-                                                </li>
-                                            {% endif %}
+                                        {% if page == current_page %}
+                                        <li class="page-item active"><a class="page-link"
+                                                                        href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{
+                                            page }}</a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item"><a class="page-link"
+                                                                 href="?pag={{ selected }}&page={{ page }}&search={{ search }}">{{
+                                            page }}</a>
+                                        </li>
+                                        {% endif %}
                                         {% endfor %}
                                         <li class="page-item"><a class="page-link"
                                                                  href="?pag={{ selected }}&page={{ next }}&search={{ search }}"
@@ -285,18 +285,15 @@
                 </div>
             </div>
         </div>
+        <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+                <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
+            </div>
+        </footer>
     </div>
-
 </div>
-<footer class="bg-white sticky-footer">
-    <div class="container my-auto">
-        <div class="text-center my-auto copyright"><span>Copyright © Любители предпрофа 2024</span></div>
-    </div>
-</footer>
 <a class="d-inline border rounded scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a>
-</div>
 <script src="../static/bootstrap/js/bootstrap.min.js"></script>
 <script src="../static/js/theme.js"></script>
 </body>
-
 </html>

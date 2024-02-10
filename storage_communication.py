@@ -17,10 +17,8 @@ basicConfig(
 BATCH_SIZE = 1024
 
 debug_storages = [
-    {"host": "127.0.0.1", "port": 1111},
-    {"host": "127.0.0.1", "port": 2222},
-    {"host": "127.0.0.1", "port": 3333},
-    {"host": "127.0.0.1", "port": 4444},
+    {"host": "127.0.0.1", "port": 3000},
+    {"host": "127.0.0.1", "port": 8000},
 ]
 
 

@@ -24,5 +24,6 @@ class EditUserForm(FlaskForm):
 class AdminEditUserForm(FlaskForm):
     login = StringField('Логин')
     email = EmailField('eMail')
-    admin = SelectField('Статус', coerce=str, choices=[('Админ', 'Пользователь')])
+    admin = SelectField('Статус', coerce=str, choices=[(1, 'Админ'),
+                                                            (0, 'Пользователь')])
     password = PasswordField('Пароль', validators=[DataRequired()])

@@ -12,6 +12,7 @@ class UserResource(Resource):
         self.parser.add_argument('login')
         self.parser.add_argument('email')
         self.parser.add_argument('password')
+        self.parser.add_argument('admin')
 
     def get(self, user_id):
         user = self.session.query(User).get(user_id)
@@ -29,6 +30,8 @@ class UserResource(Resource):
             setattr(user, 'login', args['login'])
         if args['email'] != '':
             setattr(user, 'email', args['email'])
+        if args['admin'] != '':
+            setattr(user, 'admin', args['admin'])
         self.session.commit()
         return jsonify({'status': 'OK'})
 
@@ -40,6 +43,7 @@ class UserListResource(Resource):
         self.parser.add_argument('login', required=True)
         self.parser.add_argument('email', required=True)
         self.parser.add_argument('password', required=True)
+        self.parser.add_argument('admin', required=True)
 
     def get(self):
         return jsonify({'users': [user.to_dict(rules=("-user", "-user")) for user in self.session.query(User).all()]})
@@ -49,8 +53,8 @@ class UserListResource(Resource):
         users = User(
             login=args['login'],
             email=args['email'],
-            documents='',
-            admin=0
+            admin=args['admin'],
+            documents=''
         )
         users.set_password(args['password'])
         self.session.add(users)

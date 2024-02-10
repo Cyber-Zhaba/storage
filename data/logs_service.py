@@ -41,8 +41,15 @@ class LogsListResource(Resource):
         self.parser.add_argument('time', required=True)
         self.parser.add_argument('object_id', required=True)
         self.parser.add_argument('owner_id', required=True)
+        self.parser.add_argument('description', required=True)
 
     def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('owner_id', required=True)
+        args = parser.parse_args()
+        if args['owner_id'] != '':
+            return jsonify({'log': [log.to_dict(rules=("-log", "-log")) for log in
+                                    self.session.query(Log).filter(Log.owner_id == args['owner_id']).all()]})
         return jsonify({'log': [log.to_dict(rules=("-log", "-log")) for log in self.session.query(Log).all()]})
 
     def post(self):
@@ -51,7 +58,8 @@ class LogsListResource(Resource):
             type=args['type'],
             time=args['time'],
             object_id=args['object_id'],
-            owner_id=args['owner_id']
+            owner_id=args['owner_id'],
+            description=args['description']
         )
         self.session.add(log)
         self.session.commit()

@@ -15,3 +15,4 @@ class Log(SqlAlchemyBase, UserMixin, SerializerMixin):
     time = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     object_id = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     owner_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    description = sqlalchemy.Column(sqlalchemy.String, nullable=True)

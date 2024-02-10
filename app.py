@@ -12,6 +12,7 @@ from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
 from gevent import monkey
+from gevent.pywsgi import WSGIServer
 from markupsafe import Markup
 from requests import get, post, delete, put, patch
 from werkzeug.utils import secure_filename
@@ -57,7 +58,8 @@ def logout():
         'type': 3,
         'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
         'object_id': current_user.get_id(),
-        'owner_id': current_user.get_id()},
+        'owner_id': current_user.get_id(),
+        'description': 'Выход из аккаунта'},
          timeout=(2, 20))
     logout_user()
     return redirect("/")
@@ -86,18 +88,24 @@ def sign_up():
             elif session.query(User).filter(User.email == f'{form.email.data}').first():
                 message = "Этот email уже привязан к аккаунту"
             else:
+                admin = 0
+                if len(get('http://localhost:5000/api/users').json()['users']) == 0:
+                    admin = 1
                 post('http://localhost:5000/api/users', json={
                     'login': form.login.data,
                     'email': form.email.data,
-                    'password': form.password.data},
+                    'password': form.password.data,
+                    'admin': admin},
                      timeout=(2, 20))
                 user = session.query(User).filter(User.login == f'{form.login.data}').first()
+                print(user)
                 login_user(user, remember=form.remember_me.data)
                 post('http://localhost:5000/api/log', json={
                     'type': 0,
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': user.get_id(),
-                    'owner_id': user.get_id()},
+                    'owner_id': user.get_id(),
+                    'description': 'Регистрация'},
                      timeout=(2, 20))
                 return redirect("/")
             session.close()
@@ -125,7 +133,9 @@ def login():
                     'type': 1,
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': user.get_id(),
-                    'owner_id': user.get_id()},
+                    'owner_id': user.get_id(),
+                    'description': 'Успешная авторизация'
+                },
                      timeout=(2, 20))
                 return redirect(f"/user_profile/{user.id}")
             message = "Неправильный логин или пароль"
@@ -134,7 +144,8 @@ def login():
                     'type': 2,
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': user.get_id(),
-                    'owner_id': user.get_id()},
+                    'owner_id': user.get_id(),
+                    'description': 'Попытка входа в аккаунт'},
                      timeout=(2, 20))
             session.close()
     return render_template(
@@ -172,20 +183,22 @@ def user_profile(user_id):
         return abort(404)
     form = EditUserForm()
     user = get(f'http://localhost:5000/api/users/{user_id}', timeout=(2, 20)).json()['user']
-    form.email.data, form.login.data = user['email'], user['login']
     if request.method == 'POST':
         if form.validate_on_submit() and (form.login.data != '' or form.email.data != ''):
             put(f'http://localhost:5000/api/users/{current_user.id}', json={
                 'login': form.login.data,
-                'email': form.email.data},
+                'email': form.email.data,
+                'admin': current_user.admin},
                 timeout=(2, 20))
             post('http://localhost:5000/api/log', json={
                 'type': 4,
                 'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                'object_id': user.get_id(),
-                'owner_id': user.get_id()},
+                'object_id': current_user.id,
+                'owner_id': current_user.id,
+                'description': 'Изменение своих личных данных'},
                  timeout=(2, 20))
             return redirect(f"/user_profile/{user_id}")
+    form.email.data, form.login.data = user['email'], user['login']
     if current_user.admin == 0:
         return render_template(
             '/user_pages/user_profile.html',
@@ -241,7 +254,8 @@ def user_table_files(user_id):
                     'type': 5,
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': doc['id'],
-                    'owner_id': user_id},
+                    'owner_id': user_id,
+                    'description': f'Добавление файла: {name_of_document}'},
                      timeout=(2, 20))
             result = asyncio.run(manage(
                 "add",
@@ -373,12 +387,37 @@ def server_table():
 @app.route('/admin_user_table')
 @login_required
 def user_table():
+    def convert_size(size_bytes: int) -> str:
+        """
+        Convert size of file from bytes to human-readable format
+        :param size_bytes: size of file in bytes
+        """
+        if size_bytes == 0:
+            return "0B"
+        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return f"{s} {size_name[i]}"
     """Administrator page"""
     if current_user.admin == 1:
         users = get('http://localhost:5000/api/users', timeout=(2, 20)).json()['users']
 
         users = list(users)
-
+        for user in users:
+            user['activity'] = \
+                get('http://localhost:5000/api/log', json={'owner_id': user['id']}, timeout=(2, 20)).json()['log'][-1][
+                    'time']
+            docs = get('http://localhost:5000/api/documents',
+                       json={
+                           "owner_id": user['id'],
+                           "flag": "user_id",
+                           "name": "",
+                           "size": 0,
+                           "number_of_lines": 0
+                       },
+                       timeout=(2, 20)).json()["documents"]
+            user['size'] = convert_size(sum([int(document['size']) for document in docs]))
         pagination = request.args.get("pag")
         if pagination is None:
             pagination = 10
@@ -386,7 +425,11 @@ def user_table():
             pagination = int(pagination)
         total = len(users)
         page = int(request.args.get('page', 1))
+        search = request.args.get("search", "*")
+        if not search:
+            search = "*"
         users = users[(page - 1) * pagination: min(total, page * pagination)]
+        users = list(filter(lambda x: fnmatch(str(x['id']), search), users))
         next_p = min(page + 1, ceil(total / pagination))
         prev_p = max(page - 1, 1)
 
@@ -421,7 +464,8 @@ def delete_file(file_id):
             'type': 7,
             'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
             'object_id': file_id,
-            'owner_id': current_user.get_id()},
+            'owner_id': current_user.get_id(),
+            'description': f'Удаление файла: {document['document']['name']}'},
              timeout=(2, 20))
         delete(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20))
         asyncio.run(manage(
@@ -468,7 +512,8 @@ def add_server():
                     'type': 8,
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': serv['id'],
-                    'owner_id': current_user.get_id()},
+                    'owner_id': current_user.get_id(),
+                    'description': f'Добавление сервера: {form.name.data}'},
                      timeout=(2, 20))
 
                 return redirect('/admin_server_table')
@@ -496,7 +541,8 @@ def delete_server(server_id):
             'type': 9,
             'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
             'object_id': server_id,
-            'owner_id': current_user.get_id()},
+            'owner_id': current_user.get_id(),
+            'description': f'Удаление сервера: {storage['name']}'},
              timeout=(2, 20))
         delete(f'http://localhost:5000/api/servers/{server_id}', timeout=(2, 20))
         return redirect('/admin_server_table')
@@ -647,8 +693,50 @@ def edit_document(file_id):
 @login_required
 def edit_user(user_id):
     if current_user.admin == 1 and current_user.id != user_id:
-        documents = get('http://localhost:5000/api/documents', timeout=(2, 20)).json()['documents']
+        user = get(f'http://localhost:5000/api/users/{user_id}', timeout=(2, 20)).json()['user']
+        message, form = '', AdminEditUserForm(admin=user['admin'])
+        if request.method == 'POST':
+            if current_user.check_password(form.password.data):
+                session = db_session.create_session()
+                if session.query(User).filter(User.login == f'{form.login.data}').first() and form.login.data != user['login']:
+                    message = "Этот логин уже существует"
+                elif session.query(User).filter(User.email == f'{form.email.data}').first() and form.email.data != user['email']:
+                    message = "Этот email уже привязан к аккаунту"
+                else:
+                    put(f'http://localhost:5000/api/users/{user_id}', json={
+                        'login': form.login.data,
+                        'email': form.email.data,
+                        'admin': form.admin.data},
+                        timeout=(2, 20))
+                    post('http://localhost:5000/api/log', json={
+                        'type': 4,
+                        'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+                        'object_id': user_id,
+                        'owner_id': current_user.id,
+                        'description': f'Изменение данных пользователя: {user['login']}'},
+                         timeout=(2, 20))
+                session.close()
+            else:
+                message = 'Неверный пароль'
+        form.login.data = user['login']
+        form.email.data = user['email']
+        documents = get('http://localhost:5000/api/documents',
+                        json={
+                            "owner_id": user_id,
+                            "flag": "user_id",
+                            "name": "",
+                            "size": 0,
+                            "number_of_lines": 0,
+                        },
+                        timeout=(2, 20)).json()['documents']
         documents = list(documents)
+        search = '*' + request.args.get("search", "*") + '*'
+        if not search:
+            search = "*"
+
+        logging.debug(search)
+
+        documents = list(filter(lambda x: fnmatch(x["name"], search), iter(documents)))
         pagination = request.args.get("pag")
         if pagination is None:
             pagination = 10
@@ -660,23 +748,25 @@ def edit_user(user_id):
         next_p = min(page + 1, ceil(total / pagination))
         prev_p = max(page - 1, 1)
 
-        logs = get('http://localhost:5000/api/log', timeout=(2, 20)).json()['log']
-        logs = list(logs)
-        pagination_1 = request.args.get("pag")
+        logs = get('http://localhost:5000/api/log', json={'owner_id': user_id}, timeout=(2, 20)).json()['log']
+        logs = list(logs)[::-1]
+        pagination_1 = request.args.get("pag1")
         if pagination_1 is None:
             pagination_1 = 10
         else:
             pagination_1 = int(pagination_1)
         total_1 = len(logs)
-        page_1 = int(request.args.get('page', 1))
+        page_1 = int(request.args.get('page1', 1))
         logs = logs[(page_1 - 1) * pagination_1: min(total_1, page_1 * pagination_1)]
         next_p_1 = min(page_1 + 1, ceil(total_1 / pagination_1))
         prev_p_1 = max(page_1 - 1, 1)
-
+        format_logs = []
+        for log in logs:
+            format_logs.append({'time': log['time'], 'info': log['description']})
         return render_template('/admin_pages/about_user.html',
                                title='Страница',
                                documents=documents,
-                               logs=logs[::-1],
+                               logs=format_logs,
                                user_id=user_id,
                                current_page=page,
                                pagination=pagination,
@@ -693,7 +783,10 @@ def edit_user(user_id):
                                next_1=next_p_1,
                                prev_1=prev_p_1,
                                username=current_user.login,
+                               form_1=form,
+                               message=message
                                )
+
 
 
 if __name__ == '__main__':
@@ -711,6 +804,6 @@ if __name__ == '__main__':
     api.add_resource(ServerListResource, '/api/servers')
     api.add_resource(ServerResource, '/api/servers/<int:server_id>')
     db_session.global_init("data/data.db")
-    app.run(debug=True, host='0.0.0.0')
-    # http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
-    # http.serve_forever()
+    # app.run(debug=True, host='0.0.0.0')
+    http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
+    http.serve_forever()
