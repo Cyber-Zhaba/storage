@@ -60,7 +60,7 @@ async def find_substring(reader, writer):
 
     line_number = 0
     found_lines = []
-    with open("root\\" + filename, 'r', encoding='utf-8') as file:
+    with open(os.path.join('root', filename), 'r', encoding='utf-8') as file:
         while line := file.readline():
             line_number += 1
             if start <= line_number <= stop:

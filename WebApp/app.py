@@ -577,7 +577,7 @@ def edit_server(server_id):
                 'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                 'object_id': server['id'],
                 'owner_id': current_user.id,
-                'description': f'Изменение сервера: {server['name']}'},
+                'description': f'Изменение сервера: {server["name"]}'},
                  timeout=(2, 20))
         session = db_session.create_session()
         documents = list(get(f'http://localhost:5000/api/documents', json={
