@@ -13,7 +13,7 @@ async def read(reader, sep: str = "#"):
     return data.decode()[:-1]
 
 
-async def add_file(reader):
+async def add_file(reader, writer):
     filename = await read(reader)
     info(f"Received {filename}")
 
@@ -22,7 +22,7 @@ async def add_file(reader):
         while file_data:
             file.write(file_data)
             file_data = await reader.read(BATCH_SIZE)
-
+    writer.write("OK#".encode())
     info(f"{filename} received successfully")
 
 
@@ -140,7 +140,7 @@ async def handle_client(reader, writer):
 
     match command:
         case "Add":
-            await add_file(reader)
+            await add_file(reader, writer)
         case "Delete":
             await delete_file(reader)
         case "Get":

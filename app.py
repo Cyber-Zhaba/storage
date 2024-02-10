@@ -12,7 +12,6 @@ from flask import render_template, redirect
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 from flask_restful import Api, abort
 from gevent import monkey
-from gevent.pywsgi import WSGIServer
 from markupsafe import Markup
 from requests import get, post, delete, put, patch
 from werkzeug.utils import secure_filename
@@ -23,8 +22,7 @@ from data.logs_service import LogsListResource
 from data.server_service import ServerResource, ServerListResource
 from data.user_service import UserResource, UserListResource
 from forms.ServerForm import AddServerForm
-from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm, AdminEditUserForm
-from models.documents import Document
+from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
 from models.users import User
 from storage_communication import manage
 
@@ -55,14 +53,12 @@ def not_found(error):
 @login_required
 def logout():
     """Logout url"""
-    session = db_session.create_session()
     post('http://localhost:5000/api/log', json={
         'type': 3,
         'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
         'object_id': current_user.get_id(),
         'owner_id': current_user.get_id()},
          timeout=(2, 20))
-    session.close()
     logout_user()
     return redirect("/")
 
@@ -179,7 +175,6 @@ def user_profile(user_id):
     form.email.data, form.login.data = user['email'], user['login']
     if request.method == 'POST':
         if form.validate_on_submit() and (form.login.data != '' or form.email.data != ''):
-            session = db_session.create_session()
             put(f'http://localhost:5000/api/users/{current_user.id}', json={
                 'login': form.login.data,
                 'email': form.email.data},
@@ -190,7 +185,6 @@ def user_profile(user_id):
                 'object_id': user.get_id(),
                 'owner_id': user.get_id()},
                  timeout=(2, 20))
-            session.close()
             return redirect(f"/user_profile/{user_id}")
     if current_user.admin == 0:
         return render_template(
@@ -249,13 +243,20 @@ def user_table_files(user_id):
                     'object_id': doc['id'],
                     'owner_id': user_id},
                      timeout=(2, 20))
-            asyncio.run(manage(
+            result = asyncio.run(manage(
                 "add",
                 doc['id'],
                 name_of_document,
-                get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
+                get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
+            for v, k in result.items():
+                if k == "OK":
+                    post('http://localhost:5000/api/servers', json={
+                        "file_id": doc['id'],
+                        "host": v.split(":")[0],
+                        "port": int(v.split(":")[1])
+                    }, timeout=(2, 20))
             os.remove(f'./files/{name_of_document}')
         except PermissionError:
             pass
@@ -281,6 +282,7 @@ def user_table_files(user_id):
                         timeout=(2, 20)).json()["documents"]
 
     search = request.args.get("search", "*")
+    search = "*" + search + "*"
     if not search:
         search = "*"
 
@@ -327,9 +329,10 @@ def user_table_files(user_id):
 def server_table():
     """Administrator page"""
     if current_user.admin == 1:
-        servers = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
+        servers = get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers']
 
         search = request.args.get("search", "*")
+        search = "*" + search + "*"
         servers = list(filter(lambda x: fnmatch(x["name"], search), iter(servers)))
         servers_ping = asyncio.run(manage(
             "ping", storages=servers
@@ -425,7 +428,7 @@ def delete_file(file_id):
             "delete",
             file_id,
             document['document']['name'],
-            get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
+            get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers']
         ))
         return redirect(f'/user_table_files/{current_user.id}')
     return abort(404)
@@ -453,20 +456,20 @@ def add_server():
                     'capacity': total // (2 ** 30),
                     'ended_capacity': free // (2 ** 30)
                 }, timeout=(2, 20)).json()['server']
-                session = db_session.create_session()
+
+                asyncio.run(manage(
+                    "copy",
+                    storages=get('http://localhost:5000/api/servers',
+                                 json={'file_id': -1}, timeout=(2, 20)).json()['servers'],
+                    storage={"host": form.address.data, "port": int(form.port.data)}
+                ))
+
                 post('http://localhost:5000/api/log', json={
                     'type': 8,
                     'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                     'object_id': serv['id'],
                     'owner_id': current_user.get_id()},
                      timeout=(2, 20))
-                session.close()
-
-                asyncio.run(manage(
-                    "copy", 0, "",
-                    [get('http://localhost:5000/api/servers').json()['servers'][0]],
-                    storage={"host": form.address.data, "port": int(form.port.data)}
-                ))
 
                 return redirect('/admin_server_table')
         return render_template(
@@ -508,7 +511,7 @@ def delete_user(user_id):
     :param user_id: id of storage in base
     """
     if current_user.admin == 1:
-        storages = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
+        storages = get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers']
         files = get('http://localhost:5000/api/documents',
                     json={
                         "owner_id": user_id,
@@ -549,13 +552,20 @@ def edit_document(file_id):
                     'size': os.path.getsize(f'./files/{name_of_document}'),
                     'number_of_lines': len(file.readlines())},
                       timeout=(2, 20))
-            asyncio.run(manage(
+            result = asyncio.run(manage(
                 "add",
                 doc['id'],
                 name_of_document,
-                get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
+                get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
+            for v, k in result.items():
+                if k == "OK":
+                    post('http://localhost:5000/api/servers', json={
+                        "file_id": doc['id'],
+                        "host": v.split(":")[0],
+                        "port": int(v.split(":")[1])
+                    }, timeout=(2, 20))
             os.remove(f'./files/{name_of_document}')
         except PermissionError:
             pass
@@ -571,15 +581,22 @@ def edit_document(file_id):
                     'size': os.path.getsize(f'./files/local/{doc["name"]}'),
                     'number_of_lines': len(file.readlines())},
                       timeout=(2, 20))
-            asyncio.run(manage(
+            result = asyncio.run(manage(
                 "add", doc['id'], doc['name'],
-                get('http://localhost:5000/api/servers').json()['servers'],
+                get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers'],
                 file_folder="./files/local/"
             ))
+            for v, k in result.items():
+                if k == "OK":
+                    post('http://localhost:5000/api/servers', json={
+                        "file_id": doc['id'],
+                        "host": v.split(":")[0],
+                        "port": int(v.split(":")[1])
+                    }, timeout=(2, 20))
 
     asyncio.run(manage(
         "get", file_id, doc['name'],
-        get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
+        get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()['servers'],
         destination_folder="./files/local/"
     ))
     with open(f'./files/local/{doc["name"]}') as file:
@@ -592,7 +609,7 @@ def edit_document(file_id):
                 "find",
                 file_id,
                 doc['name'],
-                get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers'],
+                get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()['servers'],
                 substring=substr,
                 lines=doc['number_of_lines'],
             ))
@@ -629,7 +646,6 @@ def edit_document(file_id):
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def edit_user(user_id):
-    message, form = '', AdminEditUserForm
     if current_user.admin == 1 and current_user.id != user_id:
         documents = get('http://localhost:5000/api/documents', timeout=(2, 20)).json()['documents']
         documents = list(documents)
@@ -695,6 +711,6 @@ if __name__ == '__main__':
     api.add_resource(ServerListResource, '/api/servers')
     api.add_resource(ServerResource, '/api/servers/<int:server_id>')
     db_session.global_init("data/data.db")
-    # app.run(debug=True, host='0.0.0.0')
-    http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
-    http.serve_forever()
+    app.run(debug=True, host='0.0.0.0')
+    # http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
+    # http.serve_forever()

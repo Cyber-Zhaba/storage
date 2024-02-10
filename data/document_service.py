@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 
 from data import db_session
 from models.documents import Document
+from models.versions import Versions
 
 
 class DocumentResource(Resource):
@@ -19,6 +20,9 @@ class DocumentResource(Resource):
         return jsonify({'document': document.to_dict()})
 
     def delete(self, document_id):
+        doc = self.session.query(Document).get(document_id)
+        for v in self.session.query(Versions).filter(Versions.file_id == doc.id).all():
+            self.session.delete(v)
         self.session.delete(self.session.query(Document).get(document_id))
         self.session.commit()
         return jsonify({'status': 'OK'})
@@ -31,7 +35,12 @@ class DocumentResource(Resource):
 
     def patch(self, document_id: int):
         args = self.parser.parse_args()
-        self.session.query(Document).filter(Document.id == document_id).update(args)
+        doc = self.session.query(Document).filter(Document.id == document_id).first()
+        doc.name = args['name']
+        doc.owner_id = args['owner_id']
+        doc.size = args['size']
+        doc.number_of_lines = args['number_of_lines']
+        doc.version += 1
         self.session.commit()
         return jsonify({'status': 'OK'})
 

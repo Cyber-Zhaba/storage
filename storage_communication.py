@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+from asyncio import IncompleteReadError
 from logging import basicConfig, StreamHandler, DEBUG, warning
 from logging import info, error, debug
 from string import digits, ascii_lowercase
@@ -51,9 +52,11 @@ def id2scrap(file_id: int) -> str:
     return string + ".txt#"
 
 
-async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> None:
-    info(f"{storage} {file_name}")
-    reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
+async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> dict[str, str]:
+    try:
+        reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
+    except ConnectionRefusedError:
+        return {f"{storage['host']}:{storage['port']}": "Fail"}
     # Send command
     writer.write("Add#".encode())
     # Send filename
@@ -70,9 +73,12 @@ async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: 
             counter += 1
             debug(f"Progress: {counter / total * 100:.2f}%")
 
-    await writer.drain()
-    writer.close()
-    await writer.wait_closed()
+    writer.write_eof()
+    try:
+        _ = await reader.readuntil("#".encode())
+    except IncompleteReadError:
+        return {f"{storage['host']}:{storage['port']}": "Fail"}
+    return {f"{storage['host']}:{storage['port']}": "OK"}
 
 
 async def delete_file(storage: Storage, file_id: int) -> None:
@@ -85,8 +91,11 @@ async def delete_file(storage: Storage, file_id: int) -> None:
     await writer.wait_closed()
 
 
-async def download_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> None:
-    reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
+async def download_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> bool:
+    try:
+        reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
+    except ConnectionRefusedError:
+        return False
     # Send command
     writer.write("Get#".encode())
     # Send filename
@@ -101,6 +110,7 @@ async def download_file(storage: Storage, file_id: int, file_name: str, file_fol
     await writer.drain()
     writer.close()
     await writer.wait_closed()
+    return True
 
 
 async def find_substring(storage: Storage, file_id: int, start: int, stop: int, substring: str) -> [str]:
@@ -204,14 +214,20 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
                 tasks = [asyncio.create_task(add_file(s, file_id, filename, file_folder))
                          for s in storages]
 
-                await asyncio.wait(tasks)
+                response, _ = await asyncio.wait(tasks)
+                result = {}
+                for e in response:
+                    result.update(e.result())
+                return result
             case "delete":
                 tasks = [asyncio.create_task(delete_file(s, file_id))
                          for s in storages]
 
                 await asyncio.wait(tasks)
             case "get":
-                await download_file(storages[0], file_id, filename, destination_folder)
+                for storage in storages:
+                    if await download_file(storage, file_id, filename, destination_folder):
+                        break
             case "find":
                 if len(storages) == 0:
                     return
