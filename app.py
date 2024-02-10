@@ -23,7 +23,7 @@ from data.logs_service import LogsListResource
 from data.server_service import ServerResource, ServerListResource
 from data.user_service import UserResource, UserListResource
 from forms.ServerForm import AddServerForm
-from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm
+from forms.SignUpForm import SignUpForm, LoginForm, EditUserForm, AdminEditUserForm
 from models.users import User
 from storage_communication import manage
 
@@ -465,7 +465,7 @@ def delete_file(file_id):
             'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
             'object_id': file_id,
             'owner_id': current_user.get_id(),
-            'description': f'Удаление файла: {document['document']['name']}'},
+            'description': f'Удаление файла: {document["document"]["name"]}'},
              timeout=(2, 20))
         delete(f'http://localhost:5000/api/documents/{file_id}', timeout=(2, 20))
         asyncio.run(manage(
@@ -542,7 +542,7 @@ def delete_server(server_id):
             'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
             'object_id': server_id,
             'owner_id': current_user.get_id(),
-            'description': f'Удаление сервера: {storage['name']}'},
+            'description': f"Удаление сервера: {storage['name']}"},
              timeout=(2, 20))
         delete(f'http://localhost:5000/api/servers/{server_id}', timeout=(2, 20))
         return redirect('/admin_server_table')
@@ -713,7 +713,7 @@ def edit_user(user_id):
                         'time': datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
                         'object_id': user_id,
                         'owner_id': current_user.id,
-                        'description': f'Изменение данных пользователя: {user['login']}'},
+                        'description': f'Изменение данных пользователя: {user["login"]}'},
                          timeout=(2, 20))
                 session.close()
             else:
