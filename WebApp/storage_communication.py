@@ -71,10 +71,6 @@ async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: 
             debug(f"Progress: {counter / total * 100:.2f}%")
 
     writer.write_eof()
-
-    info(f"{dir(reader)}")
-    info(f"{await reader.read(-1)}")
-
     try:
         _ = await reader.readuntil("#".encode())
     except IncompleteReadError:
@@ -216,17 +212,14 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
     try:
         match mode:
             case "add":
-                info(f"{storages, file_id, filename, file_folder}")
                 tasks = [asyncio.create_task(add_file(s, file_id, filename, file_folder))
                          for s in storages]
                 response, _ = await asyncio.wait(tasks)
                 result = {}
 
                 for e in response:
-                    info(f"{e}")
                     result.update(e.result())
 
-                info(f"{result}")
 
                 return result
             case "delete":
