@@ -884,5 +884,5 @@ if __name__ == '__main__':
     api.add_resource(ServerResource, '/api/servers/<int:server_id>')
     db_session.global_init("data/data.db")
     # app.run(debug=True, host='0.0.0.0')
-    http = WSGIServer(('127.0.0.1', 5000), app.wsgi_app)
+    http = WSGIServer(('0.0.0.0', 5000), app.wsgi_app)
     http.serve_forever()

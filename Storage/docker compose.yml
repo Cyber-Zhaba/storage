@@ -1,0 +1,9 @@
+services:
+  storage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: server-image-py
+    ports:
+      - "12345:12345/tcp"
+      - protocol: tcp

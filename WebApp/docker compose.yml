@@ -1,0 +1,8 @@
+services:
+  storage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: webapp-image-py
+    ports:
+      - "5000:5000"

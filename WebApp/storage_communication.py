@@ -17,8 +17,7 @@ basicConfig(
 BATCH_SIZE = 1024
 
 debug_storages = [
-    {"host": "127.0.0.1", "port": 3000},
-    {"host": "127.0.0.1", "port": 8000},
+    {"host": "127.0.0.1", "port": 12345},
 ]
 
 
@@ -283,5 +282,5 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
 
 if __name__ == '__main__':
     print(asyncio.run(manage(
-        "ping", storages=debug_storages
+        "info", storage=debug_storages[0]
     )))
