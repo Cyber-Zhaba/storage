@@ -99,7 +99,7 @@
                                                 </div>
                                             </div>
                                             <div class="col">
-                                                <div class="mb-3"> {{ form_1.password.label }}
+                                                <div class="mb-3"> <a>Пароль администратора</a>
                                                     {{ form_1.password(class="form-control", type="password") }}
                                                     {% for error in form_1.password.errors %}
                                                         <div class="alert alert-danger" role="alert"> {{ error }}</div>
@@ -133,12 +133,11 @@
                     <div class="card-body pe-xl-5 pb-xl-5">
                         <div class="row">
                             <div class="col-md-6 col-lg-4 col-xl-3 col-xxl-3 text-nowrap">
-                                <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable"><label
-                                        class="form-label form-label">Показывать по&nbsp;
+                                <div id="dataTable_length" class="dataTables_length" aria-controls="dataTable">
                                     <form action="" method="get">
                                         <select name="pag"
                                                 class="form-select-sm d-inline-block form-select"
-                                                style="margin-right: -68px;">
+                                                style="margin-right: 0px;">
                                             <option value="10" {% if selected== 10 %} selected {% endif %}>10</option>
                                             <option value="25" {% if selected== 25 %} selected {% endif %}>25</option>
                                             <option value="50" {% if selected== 50 %} selected {% endif %}>50</option>
@@ -183,14 +182,20 @@
                                 </label></div>
                             </div>
                             <div class="col-md-6 col-xl-3 col-xxl-2">
-                                <div class="text-md-end dataTables_filter" id="dataTable_filter"><label
-                                        class="form-label form-label"><input class="form-control-sm form-control"
-                                                                             type="search" aria-controls="dataTable"
-                                                                             placeholder="Поиск серверов.."></label>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <button class="btn btn-primary btn-sm" type="submit">Искать</button>
+                                <div class="col">
+                                        <form action="" method="get" class="form-inline">
+                                            <div class="form-group">
+                                                <div class="input-group">
+                                                    <input class="form-control" name="search"
+                                                           placeholder="Поиск файлов.." style="margin-right: 10px; margin-left: 80px;">
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-primary btn-sm">Искать
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
                             </div>
                         </div>
                         <div class="table-responsive table mt-2" id="dataTable-1" role="grid"
@@ -229,7 +234,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано по
                                     {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">
@@ -272,7 +277,7 @@
                                                                                                           method="get">
                                     <select name="pag1"
                                             class="form-select-sm d-inline-block form-select"
-                                            style="margin-right: -68px;">
+                                            style="margin-right: 0px;">
                                         <option value="10" {% if selected_1== 10 %} selected {% endif %}>10</option>
                                         <option value="25" {% if selected_1== 25 %} selected {% endif %}>25</option>
                                         <option value="50" {% if selected_1== 50 %} selected {% endif %}>50</option>
@@ -282,16 +287,6 @@
                                     <button type="submit" class="btn btn-primary btn-sm">Выбрать</button>
                                 </form>
                                 </label></div>
-                            </div>
-                            <div class="col-md-6 col-lg-3 col-xl-3">
-                                <div class="text-md-end dataTables_filter" id="dataTable_filter-1"><label
-                                        class="form-label form-label form-label"><input
-                                        class="form-control-sm form-control" type="search" aria-controls="dataTable"
-                                        placeholder="Поиск действий..."></label></div>
-                            </div>
-                            <div class="col">
-                                <button class="btn btn-primary btn-sm" type="submit">Искать</button>
-                            </div>
                         </div>
                         <div class="table-responsive table mt-2" id="dataTable-2" role="grid"
                              aria-describedby="dataTable_info"
@@ -315,7 +310,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано по
                                     {{ pagination_1 }}, всего {{ total_docs_1 }}</p>
                             </div>
                             <div class="col-md-6">

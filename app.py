@@ -293,7 +293,7 @@ def user_table_files(user_id):
                         },
                         timeout=(2, 20)).json()["documents"]
 
-    search = request.args.get("search", "*")
+    search = '*' + request.args.get("search", "*") + '*'
     if not search:
         search = "*"
 
@@ -342,7 +342,7 @@ def server_table():
     if current_user.admin == 1:
         servers = get('http://localhost:5000/api/servers', timeout=(2, 20)).json()['servers']
 
-        search = request.args.get("search", "*")
+        search = '*' + request.args.get("search", "*") + '*'
         servers = list(filter(lambda x: fnmatch(x["name"], search), iter(servers)))
         servers_ping = asyncio.run(manage(
             "ping", storages=servers
@@ -421,7 +421,11 @@ def user_table():
             pagination = int(pagination)
         total = len(users)
         page = int(request.args.get('page', 1))
+        search = request.args.get("search", "*")
+        if not search:
+            search = "*"
         users = users[(page - 1) * pagination: min(total, page * pagination)]
+        users = list(filter(lambda x: fnmatch(str(x['id']), search), users))
         next_p = min(page + 1, ceil(total / pagination))
         prev_p = max(page - 1, 1)
 
@@ -708,6 +712,13 @@ def edit_user(user_id):
                         },
                         timeout=(2, 20)).json()['documents']
         documents = list(documents)
+        search = '*' + request.args.get("search", "*") + '*'
+        if not search:
+            search = "*"
+
+        logging.debug(search)
+
+        documents = list(filter(lambda x: fnmatch(x["name"], search), iter(documents)))
         pagination = request.args.get("pag")
         if pagination is None:
             pagination = 10
@@ -757,6 +768,7 @@ def edit_user(user_id):
                                form_1=form,
                                message=message
                                )
+
 
 
 if __name__ == '__main__':

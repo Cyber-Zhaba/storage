@@ -77,7 +77,6 @@
                                 <div class="row">
                                     <div class="col">
                                         <form action="" method="get" class="form-inline">
-                                            <label class="form-label form-label">Показывать по&nbsp;</label>
                                             <div class="row">
                                                 <div class="col">
 
@@ -103,7 +102,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col">
-                                                    <button type="submit" class="btn btn-primary btn-sm" ё>Выбрать
+                                                    <button type="submit" class="btn btn-primary btn-sm">Выбрать
                                                     </button>
                                                 </div>
                                             </div>
@@ -174,10 +173,9 @@
                                     <div class="col">
                                         <form action="" method="get" class="form-inline">
                                             <div class="form-group">
-                                                <label class="form-label form-label">Поиск&nbsp;</label>
                                                 <div class="input-group">
                                                     <input class="form-control" name="search"
-                                                           placeholder="Поиск файлов.." style="margin-right: 10px;">
+                                                           placeholder="Поиск серверов.." style="margin-right: 10px;">
                                                     <div class="input-group-append">
                                                         <button type="submit" class="btn btn-primary btn-sm">Искать
                                                         </button>
@@ -199,7 +197,7 @@
                                     <th>Адрес сервера</th>
                                     <th>Доступность</th>
                                     <th>Свободное место</th>
-                                    <th>Редактирование</th>
+                                    <th>Информация</th>
                                     <th>Отключить</th>
                                 </tr>
                                 </thead>
@@ -222,7 +220,7 @@
                                                href="/edit_server/{{ server.id }}"><span
                                                 class="text-white-50 icon"><i
                                                 class="fas fa-info-circle"></i></span><span
-                                                class="text-white text">Изменить</span></a></td>
+                                                class="text-white text">Узнать</span></a></td>
                                         <td><a class="btn btn-warning btn-circle ms-1" role="button"
                                                href="/delete_server/{{ server.id }}"><i
                                                 class="fas fa-exclamation-triangle text-white"></i></a></td>
@@ -233,7 +231,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 align-self-center">
-                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано
+                                <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Показано по
                                     {{ pagination }}, всего {{ total_docs }}</p>
                             </div>
                             <div class="col-md-6">
