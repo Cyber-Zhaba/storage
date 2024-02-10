@@ -4,6 +4,7 @@ import datetime
 import logging
 import math
 import os
+import time
 from fnmatch import fnmatch
 from math import ceil
 
@@ -729,18 +730,24 @@ def edit_document(file_id):
                         "port": int(v.split(":")[1])
                     }, timeout=(2, 20))
 
-    asyncio.run(manage(
-        "get", file_id, doc['name'],
-        get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()['servers'],
-        destination_folder="./files/local/"
-    ))
+    logging.info(get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json())
 
-    with open(f'./files/local/{doc["name"]}') as file:
-        text = file.read()
+    if int(doc['size']) < 1024 * 1024 * 100:
+        asyncio.run(manage(
+            "get", file_id, doc['name'],
+            get('http://localhost:5000/api/servers', json={'file_id': doc['id']}, timeout=(2, 20)).json()['servers'],
+            destination_folder=os.path.join('files', 'local')
+        ))
+        with open(os.path.join(os.path.join('files', 'local'), doc['name'])) as file:
+            text = file.read()
+    else:
+        text = "Файл слишком большой, чтобы отобразить его полностью"
 
+    time_delta = 0
     if request.method == 'GET':
         if request.args.get("substr") is not None:
             substr = request.args.get("substr")
+            tm = time.time()
             find_result = asyncio.run(manage(
                 "find",
                 file_id,
@@ -750,16 +757,23 @@ def edit_document(file_id):
                 substring=substr,
                 lines=doc['number_of_lines'],
             ))
+            time_delta = time.time() - tm
+            logging.info(f"TOTAL {time_delta}")
             rows = sorted(find_result)
-            with open(f'./files/local/{doc["name"]}') as file:
-                lines = file.readlines()
+            if int(doc['size']) < 1024 * 1024 * 100:
+                with open(f'./files/local/{doc["name"]}') as file:
+                    lines = file.readlines()
 
-            # Apply row mask
-            lines = [[i, substr,
-                      Markup(f'<mark>{substr}</mark>'.join(lines[i - 1].split(substr)))]
-                     for i in rows]
-
-    os.remove(f'./files/local/{doc["name"]}')
+                # Apply row mask
+                lines = [[i, substr,
+                          Markup(f'<mark>{substr}</mark>'.join(lines[i - 1].split(substr)))]
+                         for i in rows]
+            else:
+                lines = [[i, "", Markup('<small class="text-body-secondary">'
+                                        'Строка слишком большая, чтобы отобразить её полностью'
+                                        '</small>')] for i in rows]
+    if int(doc['size']) < 1024 * 1024 * 100:
+        os.remove(f'./files/local/{doc["name"]}')
 
     page = '/admin_pages/admin_work_with_file.html' if current_user.admin == 1 \
         else '/user_pages/user_work_with_file.html'
@@ -771,6 +785,7 @@ def edit_document(file_id):
         showtable = 3
     return render_template(
         page,
+        time_delta=round(time_delta, 2),
         filename=Markup(f"<b>{doc['name']}</b>"),
         user_id=current_user.id,
         username=current_user.login,

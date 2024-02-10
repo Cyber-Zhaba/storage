@@ -72,9 +72,6 @@ async def add_file(storage: Storage, file_id: int, file_name: str, file_folder: 
 
     writer.write_eof()
 
-    info(f"{dir(reader)}")
-    info(f"{await reader.read(-1)}")
-
     try:
         _ = await reader.readuntil("#".encode())
     except IncompleteReadError:
@@ -95,7 +92,6 @@ async def delete_file(storage: Storage, file_id: int) -> None:
 
 async def download_file(storage: Storage, file_id: int, file_name: str, file_folder: str) -> bool:
     try:
-        print(storage["host"], storage["port"])
         reader, writer = await asyncio.open_connection(storage["host"], storage["port"])
     except ConnectionRefusedError:
         return False
@@ -103,18 +99,14 @@ async def download_file(storage: Storage, file_id: int, file_name: str, file_fol
     writer.write("Get#".encode())
     # Send filename
     writer.write(id2scrap(file_id).encode())
-    await writer.drain()
     # Receive file data
-    print("opened file")
+    info("READING FILE")
     with open(os.path.join(file_folder, file_name), 'wb') as file:
         file_data = await reader.read(BATCH_SIZE)
-        print(file_data)
         while file_data:
             file.write(file_data)
             file_data = await reader.read(BATCH_SIZE)
-    await writer.drain()
-    writer.close()
-    await writer.wait_closed()
+    info("FILE IS RED")
     return True
 
 
@@ -235,10 +227,11 @@ async def manage(mode: Literal["add", "delete", "get", "find", "copy", "end", "p
 
                 await asyncio.wait(tasks)
             case "get":
-                print("get start")
                 for storage in storages:
-                    if await download_file(storage, file_id, filename, destination_folder):
-                        break
+                    downloaded = await download_file(storage, file_id, filename, destination_folder)
+                    if downloaded:
+                        return
+                raise FileNotFoundError("All File Versions on Storages are old")
             case "find":
                 if len(storages) == 0:
                     return

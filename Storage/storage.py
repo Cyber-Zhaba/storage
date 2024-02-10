@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 import os.path
 import shutil
 from logging import basicConfig, INFO, StreamHandler, warning
@@ -39,6 +40,7 @@ async def get_file(reader, writer):
         while file_data:
             writer.write(file_data)
             file_data = file.read(BATCH_SIZE)
+    writer.write_eof()
     await writer.drain()
     info(f"{filename} sent successfully")
 
@@ -58,16 +60,14 @@ async def find_substring(reader, writer):
 
     info(f"Searching for {substring.__repr__()} in {filename} from {start} to {stop}")
 
-    line_number = 0
+    line_number = start
     found_lines = []
     with open(os.path.join('root', filename), 'r', encoding='utf-8') as file:
-        while line := file.readline():
+        lines = itertools.islice(file, start - 1, stop)
+        for line in lines:
+            if substring in line:
+                found_lines.append(str(line_number))
             line_number += 1
-            if start <= line_number <= stop:
-                if substring in line:
-                    found_lines.append(str(line_number))
-            elif stop < line_number:
-                break
 
     if found_lines:
         writer.write("Y#".encode())
