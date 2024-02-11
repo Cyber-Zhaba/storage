@@ -268,8 +268,6 @@ def user_table_files(user_id):
                 file_folder="./files/"
             ))
 
-            logging.info(f"{result}")
-
             for v, k in result.items():
                 if k == "OK":
                     post('http://localhost:5000/api/servers', json={
@@ -665,10 +663,8 @@ def edit_document(file_id):
     if doc["owner_id"] != current_user.id and current_user.admin != 1:
         return abort(404)
     lines = [-1]
-    logging.info(f"{doc}, {lines}, {request.method}")
     if request.method == 'POST':
         try:
-            logging.info("IN TRY")
             document = request.files['file']
             name_of_document = doc['name']
             document.save(f'./files/{name_of_document}')
@@ -681,7 +677,6 @@ def edit_document(file_id):
                     'number_of_lines': len(file.readlines())},
                       timeout=(2, 20))
 
-            logging.info(f"{doc['id'], name_of_document}")
 
             result = asyncio.run(manage(
                 "add",
@@ -690,8 +685,6 @@ def edit_document(file_id):
                 get('http://localhost:5000/api/servers', json={}, timeout=(2, 20)).json()['servers'],
                 file_folder="./files/"
             ))
-
-            logging.info(f"{result}")
 
             for v, k in result.items():
                 if k == "OK":
