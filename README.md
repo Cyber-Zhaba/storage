@@ -355,7 +355,7 @@ gantt
         Recieve Files :e1, after d1, 0.002s
 ```
 ## Тестирование
- - [![Тут текст](адрес до картинки)](ссылка на страничку YouTube)
+ - [![Функционал](https://img.youtube.com/vi/jkeR4wVYMAU/maxresdefault.jpg)](https://youtu.be/jkeR4wVYMAU)
 ## Значения кода лога
 | Тип |               Описание                |
 |----:|:-------------------------------------:|
